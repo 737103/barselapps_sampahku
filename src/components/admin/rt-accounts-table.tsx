@@ -19,11 +19,28 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { rtAccounts } from "@/lib/data";
+import { rtAccounts, type RTAccount } from "@/lib/data";
 import { AddRtAccountModal } from "./add-rt-account-modal";
+import { useToast } from "@/hooks/use-toast";
 
 export function RtAccountsTable() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { toast } = useToast();
+
+  const handleResetPassword = (account: RTAccount) => {
+    toast({
+      title: "Password Direset",
+      description: `Password untuk akun ${account.username} telah berhasil direset.`,
+    });
+  };
+
+  const handleDeactivateAccount = (account: RTAccount) => {
+     toast({
+      title: "Akun Dinonaktifkan",
+      description: `Akun ${account.username} telah dinonaktifkan.`,
+      variant: "destructive",
+    });
+  };
 
   return (
     <>
@@ -66,8 +83,12 @@ export function RtAccountsTable() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem>Reset Password</DropdownMenuItem>
-                              <DropdownMenuItem>Nonaktifkan Akun</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleResetPassword(account)}>
+                                Reset Password
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDeactivateAccount(account)} className="text-destructive">
+                                Nonaktifkan Akun
+                              </DropdownMenuItem>
                           </DropdownMenuContent>
                           </DropdownMenu>
                       </TableCell>
