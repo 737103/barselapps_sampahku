@@ -1,20 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarInset,
-  SidebarFooter,
-} from "@/components/ui/sidebar";
 import { DashboardHeader } from "@/components/dashboard-header";
-import { Icons } from "@/components/icons";
-import { Separator } from "@/components/ui/separator";
+import { HorizontalNav } from "@/components/horizontal-nav";
 import { LayoutDashboard, Users, DollarSign, Settings, LifeBuoy, FileText } from "lucide-react";
 
 export default function RTLayout({
@@ -29,65 +17,22 @@ export default function RTLayout({
     role: "Ketua RT" as const,
   };
 
+  const navItems = [
+    { href: "/rt", label: "Dashboard", icon: LayoutDashboard, isActive: pathname === '/rt' },
+    { href: "/rt/pembayaran", label: "Pembayaran", icon: DollarSign, isActive: pathname.startsWith('/rt/pembayaran') },
+    { href: "/rt/data-warga", label: "Data Warga", icon: Users, isActive: pathname.startsWith('/rt/data-warga') },
+    { href: "/rt/laporan", label: "Laporan", icon: FileText, isActive: pathname.startsWith('/rt/laporan') },
+    { href: "/rt/settings", label: "Settings", icon: Settings, isActive: pathname.startsWith('/rt/settings') },
+    { href: "/rt/support", label: "Support", icon: LifeBuoy, isActive: pathname.startsWith('/rt/support') },
+  ];
+
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader>
-            <div className="flex items-center gap-2">
-                <Icons.logo className="h-8 w-8 text-primary" />
-                <span className="text-lg font-semibold font-headline">WastePay</span>
-            </div>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton href="/rt" isActive={pathname === '/rt'}>
-                <LayoutDashboard />
-                Dashboard
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton href="/rt/pembayaran" isActive={pathname.startsWith('/rt/pembayaran')}>
-                <DollarSign />
-                Pembayaran
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton href="/rt/data-warga" isActive={pathname.startsWith('/rt/data-warga')}>
-                <Users />
-                Data Warga
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-              <SidebarMenuButton href="/rt/laporan" isActive={pathname.startsWith('/rt/laporan')}>
-                <FileText />
-                Laporan
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarContent>
-        <SidebarFooter>
-            <Separator className="my-2" />
-            <SidebarMenu>
-                 <SidebarMenuItem>
-                    <SidebarMenuButton href="/rt/settings" isActive={pathname.startsWith('/rt/settings')}>
-                        <Settings />
-                        Settings
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-                 <SidebarMenuItem>
-                    <SidebarMenuButton href="/rt/support" isActive={pathname.startsWith('/rt/support')}>
-                        <LifeBuoy />
-                        Support
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            </SidebarMenu>
-        </SidebarFooter>
-      </Sidebar>
-      <SidebarInset>
-        <DashboardHeader user={rtUser} title="RT Dashboard" />
+    <div className="flex min-h-screen w-full flex-col">
+      <DashboardHeader user={rtUser} title="RT Dashboard" />
+      <HorizontalNav items={navItems} />
+      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 bg-muted/40">
         {children}
-      </SidebarInset>
-    </SidebarProvider>
+      </main>
+    </div>
   );
 }

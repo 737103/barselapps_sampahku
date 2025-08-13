@@ -1,20 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarInset,
-  SidebarFooter,
-} from "@/components/ui/sidebar";
 import { DashboardHeader } from "@/components/dashboard-header";
-import { Icons } from "@/components/icons";
-import { Separator } from "@/components/ui/separator";
+import { HorizontalNav } from "@/components/horizontal-nav";
 import { LayoutDashboard, History, MessageSquarePlus, Settings, LifeBuoy } from "lucide-react";
 
 export default function WargaLayout({
@@ -29,59 +17,21 @@ export default function WargaLayout({
     role: "Warga" as const,
   };
 
+  const navItems = [
+    { href: "/warga", label: "Dashboard", icon: LayoutDashboard, isActive: pathname === '/warga' },
+    { href: "/warga/riwayat-pembayaran", label: "Riwayat Pembayaran", icon: History, isActive: pathname.startsWith('/warga/riwayat-pembayaran') },
+    { href: "/warga/ajukan-sanggahan", label: "Ajukan Sanggahan", icon: MessageSquarePlus, isActive: pathname.startsWith('/warga/ajukan-sanggahan') },
+    { href: "/warga/profile", label: "Profile", icon: Settings, isActive: pathname.startsWith('/warga/profile') },
+    { href: "/warga/support", label: "Support", icon: LifeBuoy, isActive: pathname.startsWith('/warga/support') },
+  ];
+
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader>
-            <div className="flex items-center gap-2">
-                <Icons.logo className="h-8 w-8 text-primary" />
-                <span className="text-lg font-semibold font-headline">WastePay</span>
-            </div>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton href="/warga" isActive={pathname === '/warga'}>
-                <LayoutDashboard />
-                Dashboard
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton href="/warga/riwayat-pembayaran" isActive={pathname.startsWith('/warga/riwayat-pembayaran')}>
-                <History />
-                Riwayat Pembayaran
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton href="/warga/ajukan-sanggahan" isActive={pathname.startsWith('/warga/ajukan-sanggahan')}>
-                <MessageSquarePlus />
-                Ajukan Sanggahan
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarContent>
-        <SidebarFooter>
-            <Separator className="my-2" />
-            <SidebarMenu>
-                 <SidebarMenuItem>
-                    <SidebarMenuButton href="/warga/profile" isActive={pathname.startsWith('/warga/profile')}>
-                        <Settings />
-                        Profile
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-                 <SidebarMenuItem>
-                    <SidebarMenuButton href="/warga/support" isActive={pathname.startsWith('/warga/support')}>
-                        <LifeBuoy />
-                        Support
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            </SidebarMenu>
-        </SidebarFooter>
-      </Sidebar>
-      <SidebarInset>
-        <DashboardHeader user={wargaUser} title="Warga Dashboard" />
+    <div className="flex min-h-screen w-full flex-col">
+       <DashboardHeader user={wargaUser} title="Warga Dashboard" />
+       <HorizontalNav items={navItems} />
+       <main className="flex flex-1 flex-col">
         {children}
-      </SidebarInset>
-    </SidebarProvider>
+      </main>
+    </div>
   );
 }

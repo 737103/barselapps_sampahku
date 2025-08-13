@@ -1,20 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarHeader,
-  SidebarContent,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarInset,
-  SidebarFooter,
-} from "@/components/ui/sidebar";
 import { DashboardHeader } from "@/components/dashboard-header";
-import { Icons } from "@/components/icons";
-import { Separator } from "@/components/ui/separator";
+import { HorizontalNav } from "@/components/horizontal-nav";
 import { LayoutDashboard, Users, MessageSquareWarning, Settings, LifeBuoy, KeyRound } from "lucide-react";
 
 export default function AdminLayout({
@@ -29,65 +17,22 @@ export default function AdminLayout({
     role: "Admin" as const,
   };
 
+  const navItems = [
+    { href: "/admin", label: "Dashboard", icon: LayoutDashboard, isActive: pathname === '/admin' },
+    { href: "/admin/manajemen-warga", label: "Manajemen Warga", icon: Users, isActive: pathname.startsWith('/admin/manajemen-warga') },
+    { href: "/admin/manajemen-akun-rt", label: "Manajemen Akun RT", icon: KeyRound, isActive: pathname.startsWith('/admin/manajemen-akun-rt') },
+    { href: "/admin/sanggahan", label: "Sanggahan", icon: MessageSquareWarning, isActive: pathname.startsWith('/admin/sanggahan') },
+    { href: "/admin/settings", label: "Settings", icon: Settings, isActive: pathname.startsWith('/admin/settings') },
+    { href: "/admin/support", label: "Support", icon: LifeBuoy, isActive: pathname.startsWith('/admin/support') },
+  ];
+
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader>
-            <div className="flex items-center gap-2">
-                <Icons.logo className="h-8 w-8 text-primary" />
-                <span className="text-lg font-semibold font-headline">WastePay</span>
-            </div>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton href="/admin" isActive={pathname === '/admin'}>
-                <LayoutDashboard />
-                Dashboard
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton href="/admin/manajemen-warga" isActive={pathname.startsWith('/admin/manajemen-warga')}>
-                <Users />
-                Manajemen Warga
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton href="/admin/manajemen-akun-rt" isActive={pathname.startsWith('/admin/manajemen-akun-rt')}>
-                <KeyRound />
-                Manajemen Akun RT
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton href="/admin/sanggahan" isActive={pathname.startsWith('/admin/sanggahan')}>
-                <MessageSquareWarning />
-                Sanggahan
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarContent>
-        <SidebarFooter>
-            <Separator className="my-2" />
-            <SidebarMenu>
-                 <SidebarMenuItem>
-                    <SidebarMenuButton href="/admin/settings" isActive={pathname.startsWith('/admin/settings')}>
-                        <Settings />
-                        Settings
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-                 <SidebarMenuItem>
-                    <SidebarMenuButton href="/admin/support" isActive={pathname.startsWith('/admin/support')}>
-                        <LifeBuoy />
-                        Support
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            </SidebarMenu>
-        </SidebarFooter>
-      </Sidebar>
-      <SidebarInset>
-        <DashboardHeader user={adminUser} title="Admin Dashboard" />
+    <div className="flex min-h-screen w-full flex-col">
+      <DashboardHeader user={adminUser} title="Admin Dashboard" />
+      <HorizontalNav items={navItems} />
+      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 bg-muted/40">
         {children}
-      </SidebarInset>
-    </SidebarProvider>
+      </main>
+    </div>
   );
 }
