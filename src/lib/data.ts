@@ -26,7 +26,7 @@ export type Dispute = {
   rw: string;
   reason: string;
   submittedDate: string;
-  status: "Baru" | "Diproses" | "Selesai";
+  status: "Baru" | "Diproses" | "Selesai" | "Ditolak";
 };
 
 export type RTAccount = {

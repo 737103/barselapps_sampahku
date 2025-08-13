@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -18,16 +19,36 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { disputes, type Dispute } from "@/lib/data";
+import { disputes as initialDisputes, type Dispute } from "@/lib/data";
+import { useToast } from "@/hooks/use-toast";
 
-const badgeVariant: Record<Dispute["status"], "destructive" | "secondary" | "default"> = {
+type BadgeVariant = "destructive" | "secondary" | "default" | "outline";
+
+const badgeVariant: Record<Dispute["status"], BadgeVariant> = {
     "Baru": "destructive",
     "Diproses": "secondary",
-    "Selesai": "default"
+    "Selesai": "default",
+    "Ditolak": "outline",
 }
 
 export function DisputesTable() {
+  const [disputes, setDisputes] = useState<Dispute[]>(initialDisputes);
+  const { toast } = useToast();
+
+  const handleStatusChange = (disputeId: string, newStatus: Dispute["status"]) => {
+    setDisputes(prevDisputes => 
+        prevDisputes.map(d => 
+            d.id === disputeId ? {...d, status: newStatus} : d
+        )
+    );
+    toast({
+        title: "Status Sanggahan Diperbarui",
+        description: `Sanggahan telah ditandai sebagai ${newStatus}.`
+    });
+  }
+
   return (
     <Card>
         <CardHeader>
@@ -65,9 +86,21 @@ export function DisputesTable() {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuLabel>Tindakan</DropdownMenuLabel>
                             <DropdownMenuItem>Lihat Detail</DropdownMenuItem>
-                            <DropdownMenuItem>Tandai Selesai</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleStatusChange(dispute.id, 'Diproses')}>
+                                Tandai Diproses
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(dispute.id, 'Selesai')}>
+                                Tandai Selesai
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                                onClick={() => handleStatusChange(dispute.id, 'Ditolak')}
+                                className="text-destructive focus:text-destructive"
+                            >
+                                Tandai Ditolak
+                            </DropdownMenuItem>
                         </DropdownMenuContent>
                         </DropdownMenu>
                     </TableCell>
