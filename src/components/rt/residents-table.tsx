@@ -13,10 +13,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { rtResidents, type Citizen, type Payment } from "@/lib/data";
+import { rtResidents as initialResidents, type Citizen, type Payment } from "@/lib/data";
 import { payments as initialPayments } from "@/lib/data";
 import { PaymentModal } from "./payment-modal";
 import { useToast } from '@/hooks/use-toast';
+import { id } from 'date-fns/locale';
+import { format } from 'date-fns';
 
 type StatusVariant = "default" | "secondary" | "destructive";
 
@@ -30,14 +32,16 @@ type ResidentsTableProps = {
     residents?: Citizen[];
 }
 
-export function ResidentsTable({ residents = rtResidents }: ResidentsTableProps) {
+export function ResidentsTable({ residents: initialResidentsData = initialResidents }: ResidentsTableProps) {
+  const [residents, setResidents] = useState<Citizen[]>(initialResidentsData);
   const [selectedCitizen, setSelectedCitizen] = useState<Citizen | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [payments, setPayments] = useState(initialPayments);
   const { toast } = useToast();
 
   const getPaymentStatus = (citizenId: string): Payment['status'] => {
-      const payment = payments.find(p => p.citizenId === citizenId && p.period === "Juni 2024");
+      const currentPeriod = format(new Date(), "MMMM yyyy", { locale: id });
+      const payment = payments.find(p => p.citizenId === citizenId && p.period === currentPeriod);
       return payment ? payment.status : "Belum Lunas";
   }
 
@@ -47,46 +51,44 @@ export function ResidentsTable({ residents = rtResidents }: ResidentsTableProps)
   }
 
   const handleSavePayment = (paymentData: Omit<Payment, 'id' | 'citizenId' | 'status' | 'proofUrl'> & { citizenName: string }) => {
-    console.log("Saving payment:", paymentData);
-    
-    // In a real app, you would update the database here.
-    // For now, we just update the local state to reflect the change.
-    
-    const existingPaymentIndex = payments.findIndex(p => 
-        p.citizenId === selectedCitizen?.id && p.period === paymentData.period
-    );
+    if (!selectedCitizen) return;
 
-    if (existingPaymentIndex > -1) {
-        setPayments(prev => {
-            const newPayments = [...prev];
-            newPayments[existingPaymentIndex] = {
-                ...newPayments[existingPaymentIndex],
+    const newPayment: Payment = {
+      id: `p${payments.length + 1}`,
+      citizenId: selectedCitizen.id,
+      status: "Lunas",
+      proofUrl: "https://placehold.co/400x400.png", // placeholder
+      citizen: selectedCitizen,
+      ...paymentData,
+    };
+
+    setPayments(prevPayments => {
+        const existingPaymentIndex = prevPayments.findIndex(p => 
+            p.citizenId === newPayment.citizenId && p.period === newPayment.period
+        );
+
+        if (existingPaymentIndex !== -1) {
+            const updatedPayments = [...prevPayments];
+            updatedPayments[existingPaymentIndex] = {
+                ...updatedPayments[existingPaymentIndex],
                 ...paymentData,
                 status: "Lunas",
-                proofUrl: "https://placehold.co/400x400.png"
+                proofUrl: "https://placehold.co/400x400.png",
             };
-            return newPayments;
-        });
-    } else {
-        const newPayment: Payment = {
-            id: `p${payments.length + 1}`,
-            citizenId: selectedCitizen!.id,
-            status: "Lunas",
-            proofUrl: "https://placehold.co/400x400.png",
-            citizen: selectedCitizen!,
-            ...paymentData,
-        };
-        setPayments(prev => [...prev, newPayment]);
-    }
+            return updatedPayments;
+        } else {
+            return [...prevPayments, newPayment];
+        }
+    });
 
     toast({
         title: "Pembayaran Berhasil Disimpan",
         description: `Pembayaran untuk ${paymentData.citizenName} periode ${paymentData.period} telah dicatat.`,
     });
+    
     setIsModalOpen(false);
     setSelectedCitizen(null);
   }
-
 
   return (
     <>
