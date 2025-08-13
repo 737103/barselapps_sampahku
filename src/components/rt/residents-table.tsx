@@ -13,12 +13,15 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { rtResidents as initialResidents, type Citizen, type Payment } from "@/lib/data";
-import { payments as initialPayments } from "@/lib/data";
+import { payments as initialPayments, type Citizen, type Payment } from "@/lib/data";
 import { PaymentModal } from "./payment-modal";
 import { useToast } from '@/hooks/use-toast';
 import { id } from 'date-fns/locale';
 import { format } from 'date-fns';
+import { MoreHorizontal } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { EditResidentModal } from './edit-resident-modal';
+import { DeleteResidentAlert } from './delete-resident-alert';
 
 type StatusVariant = "default" | "secondary" | "destructive";
 
@@ -29,13 +32,15 @@ const badgeVariant: Record<Payment["status"], StatusVariant> = {
 }
 
 type ResidentsTableProps = {
-    residents?: Citizen[];
+    residents: Citizen[];
+    setResidents: React.Dispatch<React.SetStateAction<Citizen[]>>;
 }
 
-export function ResidentsTable({ residents: initialResidentsData = initialResidents }: ResidentsTableProps) {
-  const [residents, setResidents] = useState<Citizen[]>(initialResidentsData);
+export function ResidentsTable({ residents, setResidents }: ResidentsTableProps) {
   const [selectedCitizen, setSelectedCitizen] = useState<Citizen | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [payments, setPayments] = useState(initialPayments);
   const { toast } = useToast();
 
@@ -47,7 +52,17 @@ export function ResidentsTable({ residents: initialResidentsData = initialReside
 
   const handleRecordPayment = (citizen: Citizen) => {
     setSelectedCitizen(citizen);
-    setIsModalOpen(true);
+    setIsPaymentModalOpen(true);
+  }
+  
+  const handleEdit = (citizen: Citizen) => {
+    setSelectedCitizen(citizen);
+    setIsEditModalOpen(true);
+  }
+  
+  const handleDelete = (citizen: Citizen) => {
+    setSelectedCitizen(citizen);
+    setIsDeleteAlertOpen(true);
   }
 
   const handleSavePayment = (paymentData: Omit<Payment, 'id' | 'citizenId' | 'status' | 'proofUrl'> & { citizenName: string }) => {
@@ -86,9 +101,31 @@ export function ResidentsTable({ residents: initialResidentsData = initialReside
         description: `Pembayaran untuk ${paymentData.citizenName} periode ${paymentData.period} telah dicatat.`,
     });
     
-    setIsModalOpen(false);
+    setIsPaymentModalOpen(false);
     setSelectedCitizen(null);
   }
+
+  const confirmDelete = () => {
+    if (!selectedCitizen) return;
+    setResidents(prev => prev.filter(r => r.id !== selectedCitizen.id));
+    toast({
+        title: "Data Warga Dihapus",
+        description: `Data untuk ${selectedCitizen.name} telah dihapus.`,
+    });
+    setIsDeleteAlertOpen(false);
+    setSelectedCitizen(null);
+  };
+  
+  const handleSaveEdit = (updatedCitizen: Citizen) => {
+      setResidents(prev => prev.map(r => r.id === updatedCitizen.id ? updatedCitizen : r));
+      toast({
+          title: "Data Warga Diperbarui",
+          description: `Data untuk ${updatedCitizen.name} telah berhasil diperbarui.`
+      });
+      setIsEditModalOpen(false);
+      setSelectedCitizen(null);
+  }
+
 
   return (
     <>
@@ -121,9 +158,30 @@ export function ResidentsTable({ residents: initialResidentsData = initialReside
                         </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                       <Button variant="outline" size="sm" onClick={() => handleRecordPayment(resident)}>
-                         Catat Pembayaran
-                       </Button>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                    <span className="sr-only">Buka menu</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+                                <DropdownMenuItem onClick={() => handleRecordPayment(resident)}>
+                                    Catat Pembayaran
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleEdit(resident)}>
+                                    Edit Data
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                    className="text-destructive focus:text-destructive"
+                                    onClick={() => handleDelete(resident)}
+                                >
+                                    Hapus Data
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </TableCell>
                     </TableRow>
                 ))}
@@ -132,12 +190,26 @@ export function ResidentsTable({ residents: initialResidentsData = initialReside
         </CardContent>
     </Card>
     {selectedCitizen && (
-        <PaymentModal 
-            isOpen={isModalOpen}
-            onOpenChange={setIsModalOpen}
-            citizen={selectedCitizen}
-            onSave={handleSavePayment}
-        />
+        <>
+            <PaymentModal 
+                isOpen={isPaymentModalOpen}
+                onOpenChange={setIsPaymentModalOpen}
+                citizen={selectedCitizen}
+                onSave={handleSavePayment}
+            />
+            <EditResidentModal
+                isOpen={isEditModalOpen}
+                onOpenChange={setIsEditModalOpen}
+                citizen={selectedCitizen}
+                onSave={handleSaveEdit}
+            />
+            <DeleteResidentAlert
+                isOpen={isDeleteAlertOpen}
+                onOpenChange={setIsDeleteAlertOpen}
+                onConfirm={confirmDelete}
+                citizen={selectedCitizen}
+            />
+        </>
     )}
     </>
   );

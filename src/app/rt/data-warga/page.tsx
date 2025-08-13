@@ -161,7 +161,7 @@ export default function DataWargaPage() {
         </form>
       </Card>
 
-      <ResidentsTable residents={residents} />
+      <ResidentsTable residents={residents} setResidents={setResidents} />
     </div>
   );
 }
