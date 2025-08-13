@@ -29,6 +29,14 @@ export type Dispute = {
   status: "Baru" | "Diproses" | "Selesai";
 };
 
+export type RTAccount = {
+  id: string;
+  username: string;
+  rt: string;
+  rw: string;
+  lastLogin: string;
+};
+
 export const citizens: Citizen[] = [
   { id: "c1", name: "Budi Santoso", nik: "3201012345670001", kk: "3201012345670001", address: "Jl. Merdeka No. 1", rt: "001", rw: "001" },
   { id: "c2", name: "Siti Aminah", nik: "3201012345670002", kk: "3201012345670002", address: "Jl. Merdeka No. 2", rt: "001", rw: "001" },
@@ -48,6 +56,12 @@ export const payments: (Payment & { citizen: Citizen })[] = [
 export const disputes: Dispute[] = [
   { id: "d1", paymentId: "p1", citizenName: "Budi Santoso", rt: "001", rw: "001", reason: "Saya sudah bayar tapi status masih belum lunas.", submittedDate: "2024-06-10", status: "Baru" },
   { id: "d2", paymentId: "p3", citizenName: "Siti Aminah", rt: "001", rw: "001", reason: "Jumlah pembayaran yang tercatat salah.", submittedDate: "2024-06-11", status: "Diproses" },
+];
+
+export const rtAccounts: RTAccount[] = [
+  { id: "rt1", username: "rt001_rw001", rt: "001", rw: "001", lastLogin: "2024-06-12 10:00:00" },
+  { id: "rt2", username: "rt002_rw001", rt: "002", rw: "001", lastLogin: "2024-06-11 15:30:00" },
+  { id: "rt3", username: "rt001_rw002", rt: "001", rw: "002", lastLogin: "2024-06-10 08:00:00" },
 ];
 
 export const rtResidents = citizens.filter(c => c.rt === '001' && c.rw === '001');

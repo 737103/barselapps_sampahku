@@ -15,7 +15,7 @@ import {
 import { DashboardHeader } from "@/components/dashboard-header";
 import { Icons } from "@/components/icons";
 import { Separator } from "@/components/ui/separator";
-import { LayoutDashboard, Users, MessageSquareWarning, Settings, LifeBuoy } from "lucide-react";
+import { LayoutDashboard, Users, MessageSquareWarning, Settings, LifeBuoy, KeyRound } from "lucide-react";
 
 export default function AdminLayout({
   children,
@@ -50,6 +50,12 @@ export default function AdminLayout({
               <SidebarMenuButton href="/admin/manajemen-warga" isActive={pathname === '/admin/manajemen-warga'}>
                 <Users />
                 Manajemen Warga
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton href="/admin/manajemen-akun-rt" isActive={pathname === '/admin/manajemen-akun-rt'}>
+                <KeyRound />
+                Manajemen Akun RT
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
