@@ -18,14 +18,18 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { rtAccounts, type RTAccount } from "@/lib/data";
 import { AddRtAccountModal } from "./add-rt-account-modal";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { EditUsernameModal } from "./edit-username-modal";
 
 export function RtAccountsTable() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState<RTAccount | null>(null);
   const [deactivatedAccounts, setDeactivatedAccounts] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
@@ -34,6 +38,11 @@ export function RtAccountsTable() {
       title: "Password Direset",
       description: `Password untuk akun ${account.username} telah direset menjadi '123456'.`,
     });
+  };
+
+  const handleEditUsername = (account: RTAccount) => {
+    setSelectedAccount(account);
+    setIsEditModalOpen(true);
   };
 
   const toggleAccountStatus = (account: RTAccount) => {
@@ -63,7 +72,7 @@ export function RtAccountsTable() {
                   <CardTitle>Manajemen Akun Ketua RT</CardTitle>
                   <CardDescription>Kelola username dan password untuk setiap Ketua RT.</CardDescription>
               </div>
-              <Button onClick={() => setIsModalOpen(true)}>
+              <Button onClick={() => setIsAddModalOpen(true)}>
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Tambah Akun RT
               </Button>
@@ -100,9 +109,13 @@ export function RtAccountsTable() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                               <DropdownMenuItem onClick={() => handleEditUsername(account)}>
+                                Ubah Username
+                              </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleResetPassword(account)}>
                                 Reset Password
                               </DropdownMenuItem>
+                               <DropdownMenuSeparator />
                               <DropdownMenuItem 
                                 onClick={() => toggleAccountStatus(account)} 
                                 className={cn({
@@ -121,7 +134,14 @@ export function RtAccountsTable() {
               </Table>
           </CardContent>
       </Card>
-      <AddRtAccountModal isOpen={isModalOpen} onOpenChange={setIsModalOpen} />
+      <AddRtAccountModal isOpen={isAddModalOpen} onOpenChange={setIsAddModalOpen} />
+      {selectedAccount && (
+        <EditUsernameModal 
+          isOpen={isEditModalOpen} 
+          onOpenChange={setIsEditModalOpen} 
+          account={selectedAccount}
+        />
+      )}
     </>
   );
 }
