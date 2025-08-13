@@ -22,9 +22,11 @@ import {
 import { rtAccounts, type RTAccount } from "@/lib/data";
 import { AddRtAccountModal } from "./add-rt-account-modal";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 export function RtAccountsTable() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deactivatedAccounts, setDeactivatedAccounts] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   const handleResetPassword = (account: RTAccount) => {
@@ -35,6 +37,7 @@ export function RtAccountsTable() {
   };
 
   const handleDeactivateAccount = (account: RTAccount) => {
+     setDeactivatedAccounts((prev) => new Set(prev).add(account.id));
      toast({
       title: "Akun Dinonaktifkan",
       description: `Akun ${account.username} telah dinonaktifkan.`,
@@ -70,7 +73,9 @@ export function RtAccountsTable() {
                   <TableBody>
                   {rtAccounts.map((account) => (
                       <TableRow key={account.id}>
-                      <TableCell className="font-medium">{account.username}</TableCell>
+                      <TableCell className={cn("font-medium", {
+                        "text-destructive": deactivatedAccounts.has(account.id),
+                      })}>{account.username}</TableCell>
                       <TableCell>{`RT ${account.rt} / RW ${account.rw}`}</TableCell>
                       <TableCell>{account.lastLogin}</TableCell>
                       <TableCell className="text-right">
@@ -86,7 +91,7 @@ export function RtAccountsTable() {
                               <DropdownMenuItem onClick={() => handleResetPassword(account)}>
                                 Reset Password
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleDeactivateAccount(account)} className="text-destructive">
+                              <DropdownMenuItem onClick={() => handleDeactivateAccount(account)} className="text-destructive focus:text-destructive focus:bg-destructive/10">
                                 Nonaktifkan Akun
                               </DropdownMenuItem>
                           </DropdownMenuContent>
