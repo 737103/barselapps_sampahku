@@ -38,6 +38,34 @@ export function RtAccountsTable() {
   const [deactivatedAccounts, setDeactivatedAccounts] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
+  const handleAddAccount = (newAccountData: Omit<RTAccount, 'id' | 'lastLogin'>) => {
+    const newAccount: RTAccount = {
+      ...newAccountData,
+      id: `rt${accounts.length + 1}`,
+      lastLogin: "Baru saja",
+    };
+    setAccounts(prev => [newAccount, ...prev]);
+    toast({
+      title: "Akun Berhasil Ditambahkan",
+      description: `Akun baru untuk ${newAccount.username} telah dibuat.`,
+    });
+    setIsAddModalOpen(false);
+  };
+  
+  const handleUpdateUsername = (accountId: string, newUsername: string) => {
+    setAccounts(prev => 
+      prev.map(acc => 
+        acc.id === accountId ? { ...acc, username: newUsername } : acc
+      )
+    );
+    toast({
+      title: "Username Diperbarui",
+      description: `Username telah berhasil diubah menjadi ${newUsername}.`,
+    });
+    setIsEditModalOpen(false);
+    setSelectedAccount(null);
+  }
+
   const handleResetPassword = (account: RTAccount) => {
     toast({
       title: "Password Direset",
@@ -166,13 +194,14 @@ export function RtAccountsTable() {
               </Table>
           </CardContent>
       </Card>
-      <AddRtAccountModal isOpen={isAddModalOpen} onOpenChange={setIsAddModalOpen} />
+      <AddRtAccountModal isOpen={isAddModalOpen} onOpenChange={setIsAddModalOpen} onSave={handleAddAccount}/>
       {selectedAccount && (
         <>
           <EditUsernameModal 
             isOpen={isEditModalOpen} 
             onOpenChange={setIsEditModalOpen} 
             account={selectedAccount}
+            onSave={handleUpdateUsername}
           />
           <ChangePasswordModal
             isOpen={isChangePasswordModalOpen}
