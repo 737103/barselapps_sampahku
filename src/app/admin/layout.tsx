@@ -1,3 +1,6 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import {
   SidebarProvider,
   Sidebar,
@@ -11,7 +14,6 @@ import {
 } from "@/components/ui/sidebar";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { Icons } from "@/components/icons";
-import { UserNav } from "@/components/user-nav";
 import { Separator } from "@/components/ui/separator";
 import { LayoutDashboard, Users, MessageSquareWarning, Settings, LifeBuoy } from "lucide-react";
 
@@ -20,6 +22,7 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
   const adminUser = {
     name: "Admin Kelurahan",
     email: "admin@wastepay.app",
@@ -38,19 +41,19 @@ export default function AdminLayout({
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton href="/admin" isActive>
+              <SidebarMenuButton href="/admin" isActive={pathname === '/admin'}>
                 <LayoutDashboard />
                 Dashboard
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton href="#">
+              <SidebarMenuButton href="/admin/manajemen-warga" isActive={pathname === '/admin/manajemen-warga'}>
                 <Users />
                 Manajemen Warga
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton href="#">
+              <SidebarMenuButton href="/admin/sanggahan" isActive={pathname === '/admin/sanggahan'}>
                 <MessageSquareWarning />
                 Sanggahan
               </SidebarMenuButton>
@@ -61,13 +64,13 @@ export default function AdminLayout({
             <Separator className="my-2" />
             <SidebarMenu>
                  <SidebarMenuItem>
-                    <SidebarMenuButton href="#">
+                    <SidebarMenuButton href="/admin/settings" isActive={pathname === '/admin/settings'}>
                         <Settings />
                         Settings
                     </SidebarMenuButton>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
-                    <SidebarMenuButton href="#">
+                    <SidebarMenuButton href="/admin/support" isActive={pathname === '/admin/support'}>
                         <LifeBuoy />
                         Support
                     </SidebarMenuButton>

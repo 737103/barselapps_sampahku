@@ -1,3 +1,6 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import {
   SidebarProvider,
   Sidebar,
@@ -11,7 +14,6 @@ import {
 } from "@/components/ui/sidebar";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { Icons } from "@/components/icons";
-import { UserNav } from "@/components/user-nav";
 import { Separator } from "@/components/ui/separator";
 import { LayoutDashboard, History, MessageSquarePlus, Settings, LifeBuoy } from "lucide-react";
 
@@ -20,6 +22,7 @@ export default function WargaLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
   const wargaUser = {
     name: "Budi Santoso",
     email: "budi.s@example.com",
@@ -38,19 +41,19 @@ export default function WargaLayout({
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton href="/warga" isActive>
+              <SidebarMenuButton href="/warga" isActive={pathname === '/warga'}>
                 <LayoutDashboard />
                 Dashboard
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton href="#">
+              <SidebarMenuButton href="/warga/riwayat-pembayaran" isActive={pathname === '/warga/riwayat-pembayaran'}>
                 <History />
                 Riwayat Pembayaran
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton href="#">
+              <SidebarMenuButton href="/warga/ajukan-sanggahan" isActive={pathname === '/warga/ajukan-sanggahan'}>
                 <MessageSquarePlus />
                 Ajukan Sanggahan
               </SidebarMenuButton>
@@ -61,13 +64,13 @@ export default function WargaLayout({
             <Separator className="my-2" />
             <SidebarMenu>
                  <SidebarMenuItem>
-                    <SidebarMenuButton href="#">
+                    <SidebarMenuButton href="/warga/profile" isActive={pathname === '/warga/profile'}>
                         <Settings />
                         Profile
                     </SidebarMenuButton>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
-                    <SidebarMenuButton href="#">
+                    <SidebarMenuButton href="/warga/support" isActive={pathname === '/warga/support'}>
                         <LifeBuoy />
                         Support
                     </SidebarMenuButton>

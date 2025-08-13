@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { disputes, type Dispute } from "@/lib/data";
 
-const badgeVariant: Record<Dispute["status"], "default" | "secondary" | "destructive"> = {
+const badgeVariant: Record<Dispute["status"], "destructive" | "secondary" | "default"> = {
     "Baru": "destructive",
     "Diproses": "secondary",
     "Selesai": "default"

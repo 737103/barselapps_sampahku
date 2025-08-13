@@ -1,3 +1,6 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import {
   SidebarProvider,
   Sidebar,
@@ -11,7 +14,6 @@ import {
 } from "@/components/ui/sidebar";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { Icons } from "@/components/icons";
-import { UserNav } from "@/components/user-nav";
 import { Separator } from "@/components/ui/separator";
 import { LayoutDashboard, Users, DollarSign, Settings, LifeBuoy, FileText } from "lucide-react";
 
@@ -20,6 +22,7 @@ export default function RTLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
   const rtUser = {
     name: "Ketua RT 001/001",
     email: "rt001@wastepay.app",
@@ -38,25 +41,25 @@ export default function RTLayout({
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton href="/rt" isActive>
+              <SidebarMenuButton href="/rt" isActive={pathname === '/rt'}>
                 <LayoutDashboard />
                 Dashboard
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton href="#">
+              <SidebarMenuButton href="/rt/pembayaran" isActive={pathname === '/rt/pembayaran'}>
                 <DollarSign />
                 Pembayaran
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton href="#">
+              <SidebarMenuButton href="/rt/data-warga" isActive={pathname === '/rt/data-warga'}>
                 <Users />
                 Data Warga
               </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
-              <SidebarMenuButton href="#">
+              <SidebarMenuButton href="/rt/laporan" isActive={pathname === '/rt/laporan'}>
                 <FileText />
                 Laporan
               </SidebarMenuButton>
@@ -67,13 +70,13 @@ export default function RTLayout({
             <Separator className="my-2" />
             <SidebarMenu>
                  <SidebarMenuItem>
-                    <SidebarMenuButton href="#">
+                    <SidebarMenuButton href="/rt/settings" isActive={pathname === '/rt/settings'}>
                         <Settings />
                         Settings
                     </SidebarMenuButton>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
-                    <SidebarMenuButton href="#">
+                    <SidebarMenuButton href="/rt/support" isActive={pathname === '/rt/support'}>
                         <LifeBuoy />
                         Support
                     </SidebarMenuButton>
