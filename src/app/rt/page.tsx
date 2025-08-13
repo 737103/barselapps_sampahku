@@ -1,3 +1,4 @@
+
 import { StatCard } from "@/components/stat-card";
 import { ResidentsTable } from "@/components/rt/residents-table";
 import { DollarSign, Users, AlertTriangle, PieChart } from "lucide-react";

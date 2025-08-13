@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -25,7 +26,11 @@ const badgeVariant: Record<Payment["status"], StatusVariant> = {
     "Tertunda": "secondary"
 }
 
-export function ResidentsTable() {
+type ResidentsTableProps = {
+    residents?: Citizen[];
+}
+
+export function ResidentsTable({ residents = rtResidents }: ResidentsTableProps) {
   const [selectedCitizen, setSelectedCitizen] = useState<Citizen | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [payments, setPayments] = useState(initialPayments);
@@ -104,7 +109,7 @@ export function ResidentsTable() {
                 </TableRow>
                 </TableHeader>
                 <TableBody>
-                {rtResidents.map((resident) => (
+                {residents.map((resident) => (
                     <TableRow key={resident.id}>
                     <TableCell className="font-medium">{resident.name}</TableCell>
                     <TableCell>{resident.address}</TableCell>
