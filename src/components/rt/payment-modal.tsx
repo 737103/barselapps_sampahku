@@ -94,10 +94,11 @@ export function PaymentModal({
                 <Button asChild variant="outline">
                     <label htmlFor="file-upload" className="cursor-pointer flex items-center gap-2">
                         <Upload className="h-4 w-4" />
-                        <span>Unggah File</span>
+                        <span>Unggah Gambar</span>
                     </label>
                 </Button>
-                <Input id="file-upload" type="file" className="sr-only"/>
+                <Input id="file-upload" type="file" className="sr-only" accept="image/*"/>
+                <p className="text-xs text-muted-foreground mt-1">Unggah gambar (maks. 500 KB).</p>
             </div>
           </div>
         </div>
