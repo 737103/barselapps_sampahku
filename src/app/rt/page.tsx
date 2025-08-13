@@ -1,9 +1,15 @@
 
+"use client";
+
+import { useState } from "react";
 import { StatCard } from "@/components/stat-card";
 import { ResidentsTable } from "@/components/rt/residents-table";
 import { DollarSign, Users, AlertTriangle, PieChart } from "lucide-react";
+import { rtResidents, type Citizen } from "@/lib/data";
 
 export default function RTDashboardPage() {
+  const [residents, setResidents] = useState<Citizen[]>(rtResidents);
+
   return (
     <>
       <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
@@ -33,7 +39,7 @@ export default function RTDashboardPage() {
         />
       </div>
       <div className="grid gap-4 md:gap-8">
-        <ResidentsTable />
+        <ResidentsTable residents={residents} setResidents={setResidents} />
       </div>
     </>
   );

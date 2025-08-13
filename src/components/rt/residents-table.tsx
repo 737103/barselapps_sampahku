@@ -32,11 +32,11 @@ const badgeVariant: Record<Payment["status"], StatusVariant> = {
 }
 
 type ResidentsTableProps = {
-    residents: Citizen[];
-    setResidents: React.Dispatch<React.SetStateAction<Citizen[]>>;
+    residents?: Citizen[];
+    setResidents?: React.Dispatch<React.SetStateAction<Citizen[]>>;
 }
 
-export function ResidentsTable({ residents, setResidents }: ResidentsTableProps) {
+export function ResidentsTable({ residents = [], setResidents = () => {} }: ResidentsTableProps) {
   const [selectedCitizen, setSelectedCitizen] = useState<Citizen | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
