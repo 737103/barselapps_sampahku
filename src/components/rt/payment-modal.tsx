@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Calendar as CalendarIcon, Upload } from "lucide-react";
-import type { Citizen } from "@/lib/data";
+import type { Citizen, Payment } from "@/lib/data";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Calendar } from "../ui/calendar";
 import { cn } from "@/lib/utils";
@@ -24,114 +24,133 @@ type PaymentModalProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   citizen: Citizen;
+  onSave: (paymentData: Omit<Payment, 'id' | 'citizenId' | 'status' | 'proofUrl'> & { citizenName: string }) => void;
 };
 
 export function PaymentModal({
   isOpen,
   onOpenChange,
   citizen,
+  onSave,
 }: PaymentModalProps) {
   const [date, setDate] = React.useState<Date>();
   const [period, setPeriod] = React.useState<Date>();
+  const [amount, setAmount] = React.useState(25000);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (period && date && amount) {
+        onSave({
+            period: format(period, "MMMM yyyy", { locale: id }),
+            paymentDate: format(date, "yyyy-MM-dd"),
+            amount,
+            citizenName: citizen.name,
+        });
+    }
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Catat Pembayaran Iuran</DialogTitle>
-          <DialogDescription>
-            Input detail pembayaran untuk <span className="font-semibold">{citizen.name}</span>.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-             <Label htmlFor="periode" className="text-right">
-              Periode
-            </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-[240px] justify-start text-left font-normal col-span-3",
-                    !period && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {period ? format(period, "MMMM yyyy", { locale: id }) : <span>Pilih periode</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={period}
-                  onSelect={setPeriod}
-                  initialFocus
-                  captionLayout="dropdown-buttons"
-                  fromYear={2023}
-                  toYear={2025}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="amount" className="text-right">
-              Jumlah (Rp)
-            </Label>
-            <Input
-              id="amount"
-              type="number"
-              defaultValue="25000"
-              className="col-span-3"
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="date" className="text-right">
-              Tanggal Bayar
-            </Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-[240px] justify-start text-left font-normal col-span-3",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP", { locale: id }) : <span>Pilih tanggal</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="proof" className="text-right">
-              Bukti Foto
-            </Label>
-            <div className="col-span-3">
-                <Button asChild variant="outline">
-                    <label htmlFor="file-upload" className="cursor-pointer flex items-center gap-2">
-                        <Upload className="h-4 w-4" />
-                        <span>Unggah Gambar</span>
-                    </label>
-                </Button>
-                <Input id="file-upload" type="file" className="sr-only" accept="image/*"/>
-                <p className="text-xs text-muted-foreground mt-1">Unggah gambar (maks. 500 KB).</p>
+        <form onSubmit={handleSubmit}>
+            <DialogHeader>
+            <DialogTitle>Catat Pembayaran Iuran</DialogTitle>
+            <DialogDescription>
+                Input detail pembayaran untuk <span className="font-semibold">{citizen.name}</span>.
+            </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="periode" className="text-right">
+                Periode
+                </Label>
+                <Popover>
+                <PopoverTrigger asChild>
+                    <Button
+                    variant={"outline"}
+                    className={cn(
+                        "w-[240px] justify-start text-left font-normal col-span-3",
+                        !period && "text-muted-foreground"
+                    )}
+                    >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {period ? format(period, "MMMM yyyy", { locale: id }) : <span>Pilih periode</span>}
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                    mode="single"
+                    selected={period}
+                    onSelect={setPeriod}
+                    initialFocus
+                    captionLayout="dropdown-buttons"
+                    fromYear={2023}
+                    toYear={2025}
+                    />
+                </PopoverContent>
+                </Popover>
             </div>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Batal</Button>
-          <Button type="submit">Simpan Pembayaran</Button>
-        </DialogFooter>
+            <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="amount" className="text-right">
+                Jumlah (Rp)
+                </Label>
+                <Input
+                id="amount"
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(Number(e.target.value))}
+                className="col-span-3"
+                required
+                />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="date" className="text-right">
+                Tanggal Bayar
+                </Label>
+                <Popover>
+                <PopoverTrigger asChild>
+                    <Button
+                    variant={"outline"}
+                    className={cn(
+                        "w-[240px] justify-start text-left font-normal col-span-3",
+                        !date && "text-muted-foreground"
+                    )}
+                    >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {date ? format(date, "PPP", { locale: id }) : <span>Pilih tanggal</span>}
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={setDate}
+                    initialFocus
+                    />
+                </PopoverContent>
+                </Popover>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="proof" className="text-right">
+                Bukti Foto
+                </Label>
+                <div className="col-span-3">
+                    <Button asChild variant="outline">
+                        <label htmlFor="file-upload" className="cursor-pointer flex items-center gap-2">
+                            <Upload className="h-4 w-4" />
+                            <span>Unggah Gambar</span>
+                        </label>
+                    </Button>
+                    <Input id="file-upload" type="file" className="sr-only" accept="image/*"/>
+                    <p className="text-xs text-muted-foreground mt-1">Unggah gambar (maks. 500 KB).</p>
+                </div>
+            </div>
+            </div>
+            <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Batal</Button>
+            <Button type="submit">Simpan Pembayaran</Button>
+            </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
