@@ -18,6 +18,7 @@ import { Calendar } from "../ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import React from "react";
+import { id } from 'date-fns/locale';
 
 type PaymentModalProps = {
   isOpen: boolean;
@@ -31,6 +32,7 @@ export function PaymentModal({
   citizen,
 }: PaymentModalProps) {
   const [date, setDate] = React.useState<Date>();
+  const [period, setPeriod] = React.useState<Date>();
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -43,10 +45,34 @@ export function PaymentModal({
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
+             <Label htmlFor="periode" className="text-right">
               Periode
             </Label>
-            <Input id="name" defaultValue="Juni 2024" className="col-span-3" disabled />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-[240px] justify-start text-left font-normal col-span-3",
+                    !period && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {period ? format(period, "MMMM yyyy", { locale: id }) : <span>Pilih periode</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={period}
+                  onSelect={setPeriod}
+                  initialFocus
+                  captionLayout="dropdown-buttons"
+                  fromYear={2023}
+                  toYear={2025}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="amount" className="text-right">
@@ -73,7 +99,7 @@ export function PaymentModal({
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : <span>Pilih tanggal</span>}
+                  {date ? format(date, "PPP", { locale: id }) : <span>Pilih tanggal</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
