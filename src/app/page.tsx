@@ -1,3 +1,4 @@
+
 import { LoginForm } from "@/components/login-form";
 import { Icons } from "@/components/icons";
 
@@ -8,7 +9,7 @@ export default function LoginPage() {
         <div className="flex flex-col items-center space-y-2 text-center">
           <Icons.logo className="h-12 w-12" />
           <h1 className="text-2xl font-semibold tracking-tight font-headline">
-            Welcome to WastePay
+            Pembayaran SampahKU
           </h1>
           <p className="text-sm text-muted-foreground">
             Please login to your account
