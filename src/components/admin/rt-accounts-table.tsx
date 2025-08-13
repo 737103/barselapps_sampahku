@@ -30,7 +30,7 @@ export function RtAccountsTable() {
   const handleResetPassword = (account: RTAccount) => {
     toast({
       title: "Password Direset",
-      description: `Password untuk akun ${account.username} telah berhasil direset.`,
+      description: `Password untuk akun ${account.username} telah direset menjadi '123456'.`,
     });
   };
 
