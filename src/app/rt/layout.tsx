@@ -47,19 +47,19 @@ export default function RTLayout({
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton href="/rt/pembayaran" isActive={pathname === '/rt/pembayaran'}>
+              <SidebarMenuButton href="/rt/pembayaran" isActive={pathname.startsWith('/rt/pembayaran')}>
                 <DollarSign />
                 Pembayaran
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton href="/rt/data-warga" isActive={pathname === '/rt/data-warga'}>
+              <SidebarMenuButton href="/rt/data-warga" isActive={pathname.startsWith('/rt/data-warga')}>
                 <Users />
                 Data Warga
               </SidebarMenuButton>
             </SidebarMenuItem>
              <SidebarMenuItem>
-              <SidebarMenuButton href="/rt/laporan" isActive={pathname === '/rt/laporan'}>
+              <SidebarMenuButton href="/rt/laporan" isActive={pathname.startsWith('/rt/laporan')}>
                 <FileText />
                 Laporan
               </SidebarMenuButton>
@@ -70,13 +70,13 @@ export default function RTLayout({
             <Separator className="my-2" />
             <SidebarMenu>
                  <SidebarMenuItem>
-                    <SidebarMenuButton href="/rt/settings" isActive={pathname === '/rt/settings'}>
+                    <SidebarMenuButton href="/rt/settings" isActive={pathname.startsWith('/rt/settings')}>
                         <Settings />
                         Settings
                     </SidebarMenuButton>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
-                    <SidebarMenuButton href="/rt/support" isActive={pathname === '/rt/support'}>
+                    <SidebarMenuButton href="/rt/support" isActive={pathname.startsWith('/rt/support')}>
                         <LifeBuoy />
                         Support
                     </SidebarMenuButton>

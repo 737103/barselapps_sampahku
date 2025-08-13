@@ -47,19 +47,19 @@ export default function AdminLayout({
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton href="/admin/manajemen-warga" isActive={pathname === '/admin/manajemen-warga'}>
+              <SidebarMenuButton href="/admin/manajemen-warga" isActive={pathname.startsWith('/admin/manajemen-warga')}>
                 <Users />
                 Manajemen Warga
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton href="/admin/manajemen-akun-rt" isActive={pathname === '/admin/manajemen-akun-rt'}>
+              <SidebarMenuButton href="/admin/manajemen-akun-rt" isActive={pathname.startsWith('/admin/manajemen-akun-rt')}>
                 <KeyRound />
                 Manajemen Akun RT
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton href="/admin/sanggahan" isActive={pathname === '/admin/sanggahan'}>
+              <SidebarMenuButton href="/admin/sanggahan" isActive={pathname.startsWith('/admin/sanggahan')}>
                 <MessageSquareWarning />
                 Sanggahan
               </SidebarMenuButton>
@@ -70,13 +70,13 @@ export default function AdminLayout({
             <Separator className="my-2" />
             <SidebarMenu>
                  <SidebarMenuItem>
-                    <SidebarMenuButton href="/admin/settings" isActive={pathname === '/admin/settings'}>
+                    <SidebarMenuButton href="/admin/settings" isActive={pathname.startsWith('/admin/settings')}>
                         <Settings />
                         Settings
                     </SidebarMenuButton>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
-                    <SidebarMenuButton href="/admin/support" isActive={pathname === '/admin/support'}>
+                    <SidebarMenuButton href="/admin/support" isActive={pathname.startsWith('/admin/support')}>
                         <LifeBuoy />
                         Support
                     </SidebarMenuButton>

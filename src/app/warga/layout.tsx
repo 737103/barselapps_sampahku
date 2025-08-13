@@ -47,13 +47,13 @@ export default function WargaLayout({
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton href="/warga/riwayat-pembayaran" isActive={pathname === '/warga/riwayat-pembayaran'}>
+              <SidebarMenuButton href="/warga/riwayat-pembayaran" isActive={pathname.startsWith('/warga/riwayat-pembayaran')}>
                 <History />
                 Riwayat Pembayaran
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton href="/warga/ajukan-sanggahan" isActive={pathname === '/warga/ajukan-sanggahan'}>
+              <SidebarMenuButton href="/warga/ajukan-sanggahan" isActive={pathname.startsWith('/warga/ajukan-sanggahan')}>
                 <MessageSquarePlus />
                 Ajukan Sanggahan
               </SidebarMenuButton>
@@ -64,13 +64,13 @@ export default function WargaLayout({
             <Separator className="my-2" />
             <SidebarMenu>
                  <SidebarMenuItem>
-                    <SidebarMenuButton href="/warga/profile" isActive={pathname === '/warga/profile'}>
+                    <SidebarMenuButton href="/warga/profile" isActive={pathname.startsWith('/warga/profile')}>
                         <Settings />
                         Profile
                     </SidebarMenuButton>
                 </SidebarMenuItem>
                  <SidebarMenuItem>
-                    <SidebarMenuButton href="/warga/support" isActive={pathname === '/warga/support'}>
+                    <SidebarMenuButton href="/warga/support" isActive={pathname.startsWith('/warga/support')}>
                         <LifeBuoy />
                         Support
                     </SidebarMenuButton>
