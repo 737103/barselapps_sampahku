@@ -39,7 +39,7 @@ export default function DataWargaPage() {
     if (!newResident.fullName || !newResident.nik || !newResident.address) {
         toast({
             title: "Data Tidak Lengkap",
-            description: "Mohon isi semua kolom yang wajib diisi.",
+            description: "Mohon isi semua kolom yang wajib diisi (Nama, Alamat, NIK).",
             variant: "destructive",
         });
         return;
