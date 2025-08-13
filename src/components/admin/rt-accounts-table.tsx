@@ -25,10 +25,15 @@ import { AddRtAccountModal } from "./add-rt-account-modal";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { EditUsernameModal } from "./edit-username-modal";
+import { ChangePasswordModal } from "./change-password-modal";
+import { DeleteAccountAlert } from "./delete-account-alert";
 
 export function RtAccountsTable() {
+  const [accounts, setAccounts] = useState<RTAccount[]>(rtAccounts);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<RTAccount | null>(null);
   const [deactivatedAccounts, setDeactivatedAccounts] = useState<Set<string>>(new Set());
   const { toast } = useToast();
@@ -44,6 +49,28 @@ export function RtAccountsTable() {
     setSelectedAccount(account);
     setIsEditModalOpen(true);
   };
+  
+  const handleChangePassword = (account: RTAccount) => {
+    setSelectedAccount(account);
+    setIsChangePasswordModalOpen(true);
+  };
+
+  const handleDeleteAccount = (account: RTAccount) => {
+    setSelectedAccount(account);
+    setIsDeleteAlertOpen(true);
+  };
+
+  const confirmDeleteAccount = () => {
+    if (!selectedAccount) return;
+    setAccounts(accounts.filter(acc => acc.id !== selectedAccount.id));
+    toast({
+        title: "Akun Dihapus",
+        description: `Akun ${selectedAccount.username} telah berhasil dihapus.`,
+    });
+    setIsDeleteAlertOpen(false);
+    setSelectedAccount(null);
+  };
+
 
   const toggleAccountStatus = (account: RTAccount) => {
     const newDeactivatedAccounts = new Set(deactivatedAccounts);
@@ -90,7 +117,7 @@ export function RtAccountsTable() {
                   </TableRow>
                   </TableHeader>
                   <TableBody>
-                  {rtAccounts.map((account) => {
+                  {accounts.map((account) => {
                     const isDeactivated = deactivatedAccounts.has(account.id);
                     return (
                       <TableRow key={account.id}>
@@ -108,21 +135,26 @@ export function RtAccountsTable() {
                               </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                              <DropdownMenuLabel>Tindakan Cepat</DropdownMenuLabel>
                                <DropdownMenuItem onClick={() => handleEditUsername(account)}>
                                 Ubah Username
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleChangePassword(account)}>
+                                Ubah Password
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleResetPassword(account)}>
                                 Reset Password
                               </DropdownMenuItem>
                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => toggleAccountStatus(account)}>
+                                  {isDeactivated ? "Aktifkan Akun" : "Nonaktifkan Akun"}
+                                </DropdownMenuItem>
+                               <DropdownMenuSeparator />
                               <DropdownMenuItem 
-                                onClick={() => toggleAccountStatus(account)} 
-                                className={cn({
-                                  "text-destructive focus:text-destructive focus:bg-destructive/10": !isDeactivated
-                                })}
+                                onClick={() => handleDeleteAccount(account)} 
+                                className="text-destructive focus:text-destructive focus:bg-destructive/10"
                               >
-                                {isDeactivated ? "Aktifkan Akun" : "Nonaktifkan Akun"}
+                                Hapus Akun
                               </DropdownMenuItem>
                           </DropdownMenuContent>
                           </DropdownMenu>
@@ -136,11 +168,24 @@ export function RtAccountsTable() {
       </Card>
       <AddRtAccountModal isOpen={isAddModalOpen} onOpenChange={setIsAddModalOpen} />
       {selectedAccount && (
-        <EditUsernameModal 
-          isOpen={isEditModalOpen} 
-          onOpenChange={setIsEditModalOpen} 
-          account={selectedAccount}
-        />
+        <>
+          <EditUsernameModal 
+            isOpen={isEditModalOpen} 
+            onOpenChange={setIsEditModalOpen} 
+            account={selectedAccount}
+          />
+          <ChangePasswordModal
+            isOpen={isChangePasswordModalOpen}
+            onOpenChange={setIsChangePasswordModalOpen}
+            account={selectedAccount}
+          />
+          <DeleteAccountAlert
+            isOpen={isDeleteAlertOpen}
+            onOpenChange={setIsDeleteAlertOpen}
+            onConfirm={confirmDeleteAccount}
+            account={selectedAccount}
+          />
+        </>
       )}
     </>
   );
