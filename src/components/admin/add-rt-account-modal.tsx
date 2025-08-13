@@ -11,6 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Eye, EyeOff } from "lucide-react";
+import React from "react";
 
 type AddRtAccountModalProps = {
   isOpen: boolean;
@@ -18,6 +20,9 @@ type AddRtAccountModalProps = {
 };
 
 export function AddRtAccountModal({ isOpen, onOpenChange }: AddRtAccountModalProps) {
+  const [showPassword, setShowPassword] = React.useState(false);
+  const togglePasswordVisibility = () => setShowPassword(!showPassword);
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -57,6 +62,30 @@ export function AddRtAccountModal({ isOpen, onOpenChange }: AddRtAccountModalPro
               RW
             </Label>
             <Input id="rw" placeholder="Contoh: 001" className="col-span-3" />
+          </div>
+           <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="username" className="text-right">
+              Username
+            </Label>
+            <Input id="username" placeholder="Contoh: rt001_rw001" className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="password" className="text-right">
+              Password
+            </Label>
+            <div className="col-span-3 relative">
+              <Input id="password" type={showPassword ? "text" : "password"} placeholder="Masukkan password" />
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="icon" 
+                onClick={togglePasswordVisibility} 
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                <span className="sr-only">{showPassword ? 'Sembunyikan password' : 'Tampilkan password'}</span>
+              </Button>
+            </div>
           </div>
         </div>
         <DialogFooter>
