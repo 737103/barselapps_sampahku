@@ -36,13 +36,23 @@ export function RtAccountsTable() {
     });
   };
 
-  const handleDeactivateAccount = (account: RTAccount) => {
-     setDeactivatedAccounts((prev) => new Set(prev).add(account.id));
-     toast({
-      title: "Akun Dinonaktifkan",
-      description: `Akun ${account.username} telah dinonaktifkan.`,
-      variant: "destructive",
-    });
+  const toggleAccountStatus = (account: RTAccount) => {
+    const newDeactivatedAccounts = new Set(deactivatedAccounts);
+    if (newDeactivatedAccounts.has(account.id)) {
+      newDeactivatedAccounts.delete(account.id);
+      toast({
+        title: "Akun Diaktifkan",
+        description: `Akun ${account.username} telah diaktifkan kembali.`,
+      });
+    } else {
+      newDeactivatedAccounts.add(account.id);
+      toast({
+        title: "Akun Dinonaktifkan",
+        description: `Akun ${account.username} telah dinonaktifkan.`,
+        variant: "destructive",
+      });
+    }
+    setDeactivatedAccounts(newDeactivatedAccounts);
   };
 
   return (
@@ -71,10 +81,12 @@ export function RtAccountsTable() {
                   </TableRow>
                   </TableHeader>
                   <TableBody>
-                  {rtAccounts.map((account) => (
+                  {rtAccounts.map((account) => {
+                    const isDeactivated = deactivatedAccounts.has(account.id);
+                    return (
                       <TableRow key={account.id}>
                       <TableCell className={cn("font-medium", {
-                        "text-destructive": deactivatedAccounts.has(account.id),
+                        "text-destructive": isDeactivated,
                       })}>{account.username}</TableCell>
                       <TableCell>{`RT ${account.rt} / RW ${account.rw}`}</TableCell>
                       <TableCell>{account.lastLogin}</TableCell>
@@ -91,14 +103,20 @@ export function RtAccountsTable() {
                               <DropdownMenuItem onClick={() => handleResetPassword(account)}>
                                 Reset Password
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleDeactivateAccount(account)} className="text-destructive focus:text-destructive focus:bg-destructive/10">
-                                Nonaktifkan Akun
+                              <DropdownMenuItem 
+                                onClick={() => toggleAccountStatus(account)} 
+                                className={cn({
+                                  "text-destructive focus:text-destructive focus:bg-destructive/10": !isDeactivated
+                                })}
+                              >
+                                {isDeactivated ? "Aktifkan Akun" : "Nonaktifkan Akun"}
                               </DropdownMenuItem>
                           </DropdownMenuContent>
                           </DropdownMenu>
                       </TableCell>
                       </TableRow>
-                  ))}
+                    )
+                  })}
                   </TableBody>
               </Table>
           </CardContent>
