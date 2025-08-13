@@ -19,7 +19,7 @@ export function DashboardHeader({ user, title, className }: DashboardHeaderProps
         <div className="flex items-center gap-4">
              <div className="flex items-center gap-2">
                 <Icons.logo className="h-8 w-8 text-primary" />
-                <span className="text-lg font-semibold font-headline">WastePay</span>
+                <span className="text-lg font-semibold font-headline">SampahKU</span>
             </div>
             <div className="h-6 w-px bg-border" />
             <h1 className="text-lg font-semibold md:text-xl font-headline">{title}</h1>
