@@ -257,7 +257,7 @@ export const getPaymentById = async(id: string): Promise<Payment | null> => {
     }
 }
 
-export const recordPayment = async (citizenId: string, paymentData: Omit<Payment, 'id' | 'citizenId' | 'status' | 'proofUrl' | 'citizen'>): Promise<Payment | null> => {
+export const recordPayment = async (citizenId: string, paymentData: Omit<Payment, 'id' | 'citizenId' | 'proofUrl' | 'citizen'>): Promise<Payment | null> => {
     try {
         const citizen = await getCitizenById(citizenId);
         if (!citizen) throw new Error("Citizen not found");
@@ -265,29 +265,30 @@ export const recordPayment = async (citizenId: string, paymentData: Omit<Payment
         const newPaymentData = {
             ...paymentData,
             citizenId: citizenId,
-            status: "Lunas" as const,
             proofUrl: "https://placehold.co/400x400.png", // placeholder
         };
 
         // Add payment document
         const docRef = await addDoc(paymentsCollection, newPaymentData);
 
-        // Mark relevant payment reminder notifications as read
-        const notificationsQuery = query(
-            notificationsCollection, 
-            where("citizenId", "==", citizenId),
-            where("type", "==", "payment_reminder"),
-            where("period", "==", paymentData.period),
-            where("isRead", "==", false)
-        );
-        const notificationsSnapshot = await getDocs(notificationsQuery);
-        if (!notificationsSnapshot.empty) {
-            const batch = writeBatch(db);
-            notificationsSnapshot.docs.forEach(notificationDoc => {
-                batch.update(notificationDoc.ref, { isRead: true });
-            });
-            await batch.commit();
-            console.log(`Marked ${notificationsSnapshot.size} notifications as read for citizen ${citizenId} for period ${paymentData.period}`);
+        // Mark relevant payment reminder notifications as read if payment is Lunas
+        if (newPaymentData.status === "Lunas") {
+            const notificationsQuery = query(
+                notificationsCollection, 
+                where("citizenId", "==", citizenId),
+                where("type", "==", "payment_reminder"),
+                where("period", "==", paymentData.period),
+                where("isRead", "==", false)
+            );
+            const notificationsSnapshot = await getDocs(notificationsQuery);
+            if (!notificationsSnapshot.empty) {
+                const batch = writeBatch(db);
+                notificationsSnapshot.docs.forEach(notificationDoc => {
+                    batch.update(notificationDoc.ref, { isRead: true });
+                });
+                await batch.commit();
+                console.log(`Marked ${notificationsSnapshot.size} notifications as read for citizen ${citizenId} for period ${paymentData.period}`);
+            }
         }
         
         return {

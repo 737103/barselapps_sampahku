@@ -102,7 +102,7 @@ export default function PembayaranPage() {
     setIsPaymentModalOpen(true);
   }
 
-  const handleSavePayment = async (paymentData: Omit<Payment, 'id' | 'citizenId' | 'status' | 'proofUrl'> & { citizenName: string }) => {
+  const handleSavePayment = async (paymentData: Omit<Payment, 'id' | 'citizenId' | 'proofUrl'> & { citizenName: string }) => {
     if (!selectedCitizen) return;
 
     const newPayment = await recordPayment(selectedCitizen.id, paymentData);

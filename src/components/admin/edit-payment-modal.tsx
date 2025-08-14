@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { format, parse } from "date-fns";
 import React, { useState, useEffect } from "react";
 import { id } from 'date-fns/locale';
+import { useToast } from "@/hooks/use-toast";
 
 type EditPaymentModalProps = {
   isOpen: boolean;
@@ -42,6 +43,7 @@ export function EditPaymentModal({
   onSave,
 }: EditPaymentModalProps) {
   const [formData, setFormData] = useState<Payment>(payment);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (isOpen) {
@@ -79,7 +81,16 @@ export function EditPaymentModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    const dataToSave = { ...formData };
+    if (dataToSave.amount < 25000) {
+        dataToSave.status = "Belum Lunas";
+        toast({
+            title: "Jumlah Kurang",
+            description: "Karena jumlah pembayaran kurang dari Rp 25.000, status diubah menjadi 'Belum Lunas'.",
+            variant: "destructive"
+        })
+    }
+    onSave(dataToSave);
   }
 
   const parsedPeriod = () => {

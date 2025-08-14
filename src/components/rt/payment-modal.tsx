@@ -20,12 +20,13 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import React from "react";
 import { id } from 'date-fns/locale';
+import { useToast } from "@/hooks/use-toast";
 
 type PaymentModalProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   citizen: Citizen;
-  onSave: (paymentData: Omit<Payment, 'id' | 'citizenId' | 'status' | 'proofUrl'> & { citizenName: string }) => void;
+  onSave: (paymentData: Omit<Payment, 'id' | 'citizenId' | 'proofUrl'> & { citizenName: string }) => void;
 };
 
 export function PaymentModal({
@@ -37,14 +38,25 @@ export function PaymentModal({
   const [date, setDate] = React.useState<Date>();
   const [period, setPeriod] = React.useState<Date>();
   const [amount, setAmount] = React.useState(25000);
+  const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (period && date && amount) {
+        let paymentStatus: Payment['status'] = 'Lunas';
+        if (amount < 25000) {
+            paymentStatus = 'Belum Lunas';
+            toast({
+                title: "Jumlah Kurang",
+                description: "Karena jumlah pembayaran kurang dari Rp 25.000, status diubah menjadi 'Belum Lunas'.",
+                variant: "destructive"
+            });
+        }
         onSave({
             period: format(period, "MMMM yyyy", { locale: id }),
             paymentDate: format(date, "yyyy-MM-dd"),
             amount,
+            status: paymentStatus,
             citizenName: citizen.name,
         });
     }
