@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -22,9 +22,10 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { disputes as initialDisputes, type Dispute, payments, type Citizen, type Payment } from "@/lib/data";
+import { type Dispute, type Payment, type Citizen } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { CitizenDetailModal } from "./citizen-detail-modal";
+import { getAllDisputes, getPaymentById, updateDisputeStatus } from "@/lib/firebase/firestore";
 
 type BadgeVariant = "destructive" | "secondary" | "default" | "outline";
 
@@ -36,26 +37,46 @@ const badgeVariant: Record<Dispute["status"], BadgeVariant> = {
 }
 
 export function DisputesTable() {
-  const [disputes, setDisputes] = useState<Dispute[]>(initialDisputes);
+  const [disputes, setDisputes] = useState<Dispute[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<(Payment & { citizen: Citizen }) | null>(null);
   const { toast } = useToast();
 
-  const handleStatusChange = (disputeId: string, newStatus: Dispute["status"]) => {
-    setDisputes(prevDisputes => 
-        prevDisputes.map(d => 
-            d.id === disputeId ? {...d, status: newStatus} : d
-        )
-    );
-    toast({
-        title: "Status Sanggahan Diperbarui",
-        description: `Sanggahan telah ditandai sebagai ${newStatus}.`
-    });
+  useEffect(() => {
+    const fetchDisputes = async () => {
+        setLoading(true);
+        const fetchedDisputes = await getAllDisputes();
+        setDisputes(fetchedDisputes);
+        setLoading(false);
+    }
+    fetchDisputes();
+  }, [])
+
+  const handleStatusChange = async (disputeId: string, newStatus: Dispute["status"]) => {
+    const success = await updateDisputeStatus(disputeId, newStatus);
+    if(success) {
+        setDisputes(prevDisputes => 
+            prevDisputes.map(d => 
+                d.id === disputeId ? {...d, status: newStatus} : d
+            )
+        );
+        toast({
+            title: "Status Sanggahan Diperbarui",
+            description: `Sanggahan telah ditandai sebagai ${newStatus}.`
+        });
+    } else {
+        toast({
+            title: "Gagal Memperbarui Status",
+            description: "Terjadi kesalahan saat memperbarui status sanggahan.",
+            variant: "destructive",
+        })
+    }
   }
 
-  const handleViewDetails = (dispute: Dispute) => {
-    const payment = payments.find(p => p.id === dispute.paymentId);
+  const handleViewDetails = async (dispute: Dispute) => {
+    const payment = await getPaymentById(dispute.paymentId);
     if (payment && payment.citizen) {
         setSelectedDispute(dispute);
         setSelectedPayment(payment as Payment & { citizen: Citizen });
@@ -91,43 +112,53 @@ export function DisputesTable() {
                 </TableRow>
                 </TableHeader>
                 <TableBody>
-                {disputes.map((dispute) => (
-                    <TableRow key={dispute.id}>
-                    <TableCell className="font-medium">{dispute.citizenName}</TableCell>
-                    <TableCell>{`RT ${dispute.rt} / RW ${dispute.rw}`}</TableCell>
-                    <TableCell>{dispute.submittedDate}</TableCell>
-                    <TableCell>
-                        <Badge variant={badgeVariant[dispute.status]}>{dispute.status}</Badge>
-                    </TableCell>
-                    <TableCell>
-                        <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button aria-haspopup="true" size="icon" variant="ghost">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Tindakan</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleViewDetails(dispute)}>Lihat Detail</DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleStatusChange(dispute.id, 'Diproses')}>
-                                Tandai Diproses
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleStatusChange(dispute.id, 'Selesai')}>
-                                Tandai Selesai
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                                onClick={() => handleStatusChange(dispute.id, 'Ditolak')}
-                                className="text-destructive focus:text-destructive"
-                            >
-                                Tandai Ditolak
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                        </DropdownMenu>
-                    </TableCell>
+                {loading ? (
+                    <TableRow>
+                        <TableCell colSpan={5} className="text-center">Memuat data sanggahan...</TableCell>
                     </TableRow>
-                ))}
+                ) : disputes.length > 0 ? (
+                    disputes.map((dispute) => (
+                        <TableRow key={dispute.id}>
+                        <TableCell className="font-medium">{dispute.citizenName}</TableCell>
+                        <TableCell>{`RT ${dispute.rt} / RW ${dispute.rw}`}</TableCell>
+                        <TableCell>{dispute.submittedDate}</TableCell>
+                        <TableCell>
+                            <Badge variant={badgeVariant[dispute.status]}>{dispute.status}</Badge>
+                        </TableCell>
+                        <TableCell>
+                            <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button aria-haspopup="true" size="icon" variant="ghost">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Toggle menu</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Tindakan</DropdownMenuLabel>
+                                <DropdownMenuItem onClick={() => handleViewDetails(dispute)}>Lihat Detail</DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => handleStatusChange(dispute.id, 'Diproses')}>
+                                    Tandai Diproses
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleStatusChange(dispute.id, 'Selesai')}>
+                                    Tandai Selesai
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                    onClick={() => handleStatusChange(dispute.id, 'Ditolak')}
+                                    className="text-destructive focus:text-destructive"
+                                >
+                                    Tandai Ditolak
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                            </DropdownMenu>
+                        </TableCell>
+                        </TableRow>
+                    ))
+                ) : (
+                    <TableRow>
+                        <TableCell colSpan={5} className="text-center">Tidak ada sanggahan terbaru.</TableCell>
+                    </TableRow>
+                )}
                 </TableBody>
             </Table>
         </CardContent>

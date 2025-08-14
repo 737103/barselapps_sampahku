@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -12,15 +13,39 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { wargaHistory } from "@/lib/data";
 import { Eye } from "lucide-react";
 import Image from "next/image";
 import { DisputeModal } from './dispute-modal';
-import type { Payment } from '@/lib/data';
+import type { Payment, Citizen } from '@/lib/data';
+import { getPaymentsForCitizen } from '@/lib/firebase/firestore';
+
+type StatusVariant = "default" | "secondary" | "destructive";
+
+const badgeVariant: Record<Payment["status"], StatusVariant> = {
+    "Lunas": "default",
+    "Belum Lunas": "destructive",
+    "Tertunda": "secondary"
+}
 
 export function HistoryTable() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+    const [history, setHistory] = useState<Payment[]>([]);
+    const [loading, setLoading] = useState(true);
+    // Hardcoded citizen for now, replace with actual logged in user
+    const citizenId = "vE3z7I5a1v4gYa3i9x8G"; 
+
+    useEffect(() => {
+        const fetchHistory = async () => {
+            if (citizenId) {
+                setLoading(true);
+                const paymentHistory = await getPaymentsForCitizen(citizenId);
+                setHistory(paymentHistory);
+                setLoading(false);
+            }
+        };
+        fetchHistory();
+    }, [citizenId]);
 
     const handleDispute = (payment: Payment) => {
         setSelectedPayment(payment);
@@ -40,35 +65,53 @@ export function HistoryTable() {
                     <TableHead>Periode</TableHead>
                     <TableHead>Tanggal Bayar</TableHead>
                     <TableHead>Jumlah</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Bukti</TableHead>
                     <TableHead className="text-right">Aksi</TableHead>
                 </TableRow>
                 </TableHeader>
                 <TableBody>
-                {wargaHistory.map((payment) => (
-                    <TableRow key={payment.id}>
-                    <TableCell className="font-medium">{payment.period}</TableCell>
-                    <TableCell>{payment.paymentDate}</TableCell>
-                    <TableCell>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(payment.amount)}</TableCell>
-                    <TableCell>
-                        <a href={payment.proofUrl} target="_blank" rel="noopener noreferrer">
-                            <Image 
-                                src={payment.proofUrl} 
-                                alt={`Bukti ${payment.period}`}
-                                width={40}
-                                height={40}
-                                className="rounded-md object-cover"
-                                data-ai-hint="receipt"
-                            />
-                        </a>
-                    </TableCell>
-                    <TableCell className="text-right">
-                       <Button variant="outline" size="sm" onClick={() => handleDispute(payment)}>
-                         Ajukan Sanggahan
-                       </Button>
-                    </TableCell>
+                {loading ? (
+                    <TableRow>
+                        <TableCell colSpan={6} className="text-center">Memuat riwayat...</TableCell>
                     </TableRow>
-                ))}
+                ) : history.length > 0 ? (
+                    history.map((payment) => (
+                        <TableRow key={payment.id}>
+                        <TableCell className="font-medium">{payment.period}</TableCell>
+                        <TableCell>{payment.paymentDate || '-'}</TableCell>
+                        <TableCell>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(payment.amount)}</TableCell>
+                        <TableCell>
+                           <Badge variant={badgeVariant[payment.status]}>
+                                {payment.status}
+                            </Badge>
+                        </TableCell>
+                        <TableCell>
+                            {payment.proofUrl ? (
+                                <a href={payment.proofUrl} target="_blank" rel="noopener noreferrer">
+                                <Image 
+                                    src={payment.proofUrl} 
+                                    alt={`Bukti ${payment.period}`}
+                                    width={40}
+                                    height={40}
+                                    className="rounded-md object-cover"
+                                    data-ai-hint="receipt"
+                                />
+                            </a>
+                            ) : '-'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                        <Button variant="outline" size="sm" onClick={() => handleDispute(payment)}>
+                            Ajukan Sanggahan
+                        </Button>
+                        </TableCell>
+                        </TableRow>
+                    ))
+                ) : (
+                     <TableRow>
+                        <TableCell colSpan={6} className="text-center">Belum ada riwayat pembayaran.</TableCell>
+                    </TableRow>
+                )}
                 </TableBody>
             </Table>
         </CardContent>

@@ -1,6 +1,6 @@
 import { db } from "@/lib/firebase";
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, query, where, getDoc } from "firebase/firestore";
-import type { Citizen, RTAccount, Payment } from "../data";
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, query, where, getDoc, serverTimestamp } from "firebase/firestore";
+import type { Citizen, RTAccount, Payment, Dispute } from "../data";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 
@@ -145,6 +145,22 @@ export const getPaymentsForCitizen = async (citizenId: string): Promise<Payment[
     }
 };
 
+export const getPaymentById = async(id: string): Promise<Payment | null> => {
+    try {
+        const docRef = doc(db, "payments", id);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            const paymentData = docSnap.data() as Payment;
+            const citizen = await getCitizenById(paymentData.citizenId);
+            return { id: docSnap.id, ...paymentData, citizen };
+        }
+        return null;
+    } catch (error) {
+        console.error("Error getting payment by ID: ", error);
+        return null;
+    }
+}
+
 export const recordPayment = async (citizenId: string, paymentData: Omit<Payment, 'id' | 'citizenId' | 'status' | 'proofUrl' | 'citizen'>): Promise<Payment | null> => {
     try {
         const citizen = await getCitizenById(citizenId);
@@ -168,5 +184,44 @@ export const recordPayment = async (citizenId: string, paymentData: Omit<Payment
     } catch (error) {
         console.error("Error recording payment: ", error);
         return null;
+    }
+}
+
+// --- Dispute Functions ---
+const disputesCollection = collection(db, "disputes");
+
+export const addDispute = async (disputeData: Omit<Dispute, 'id' | 'submittedDate' | 'status'>): Promise<Dispute | null> => {
+    try {
+        const newDisputeData = {
+            ...disputeData,
+            submittedDate: format(new Date(), "yyyy-MM-dd"),
+            status: "Baru" as const,
+        };
+        const docRef = await addDoc(disputesCollection, newDisputeData);
+        return { id: docRef.id, ...newDisputeData };
+    } catch (error) {
+        console.error("Error adding dispute: ", error);
+        return null;
+    }
+};
+
+export const getAllDisputes = async (): Promise<Dispute[]> => {
+    try {
+        const snapshot = await getDocs(disputesCollection);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Dispute));
+    } catch (error) {
+        console.error("Error getting all disputes: ", error);
+        return [];
+    }
+}
+
+export const updateDisputeStatus = async (id: string, status: Dispute['status']): Promise<boolean> => {
+    try {
+        const docRef = doc(db, "disputes", id);
+        await updateDoc(docRef, { status });
+        return true;
+    } catch (error) {
+        console.error("Error updating dispute status: ", error);
+        return false;
     }
 }
