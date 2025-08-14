@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -65,9 +66,7 @@ export function ResidentsTable({
         const paymentMap = new Map<string, Payment>();
         for (const resident of residents) {
           const citizenPayments = await getPaymentsForCitizen(resident.id);
-          // Find the most recent payment to display period and status
-          const sortedPayments = citizenPayments.sort((a, b) => new Date(b.paymentDate || 0).getTime() - new Date(a.paymentDate || 0).getTime());
-          const periodPayment = sortedPayments.find(p => p.period === currentPeriod) || sortedPayments[0];
+          const periodPayment = citizenPayments.find(p => p.period === currentPeriod);
 
           if (periodPayment) {
             paymentMap.set(resident.id, periodPayment);
@@ -163,7 +162,7 @@ export function ResidentsTable({
   const handleSendReminder = async () => {
     const unpaidResidents = residents.filter(r => {
         const payment = getPaymentForCitizen(r.id);
-        return !payment || payment.period !== currentPeriod || payment.status !== 'Lunas';
+        return !payment || payment.status !== 'Lunas';
     });
 
     if (unpaidResidents.length === 0) {
