@@ -5,30 +5,34 @@ import { useState, useEffect } from "react";
 import { StatCard } from "@/components/stat-card";
 import { DisputesTable } from "@/components/admin/disputes-table";
 import { DollarSign, Users, MessageSquareWarning, TrendingUp } from "lucide-react";
-import { getAllCitizens, getAllPayments } from "@/lib/firebase/firestore";
+import { getAllCitizens, getAllDisputes, getAllPayments } from "@/lib/firebase/firestore";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
-import type { Payment } from "@/lib/data";
+import type { Dispute, Payment } from "@/lib/data";
 
 export default function AdminDashboardPage() {
   const [totalCitizens, setTotalCitizens] = useState<number | null>(null);
   const [totalCollected, setTotalCollected] = useState<number | null>(null);
+  const [activeDisputesCount, setActiveDisputesCount] = useState<number | null>(null);
+  const [todayDisputesCount, setTodayDisputesCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       
-      // Fetch citizens
-      const citizens = await getAllCitizens();
+      const citizensPromise = getAllCitizens();
+      const paymentsPromise = getAllPayments();
+      const disputesPromise = getAllDisputes();
+
+      const [citizens, payments, disputes] = await Promise.all([citizensPromise, paymentsPromise, disputesPromise]);
+
+      // Process citizens
       setTotalCitizens(citizens.length);
 
-      // Fetch and process payments
-      const payments = await getAllPayments();
+      // Process and process payments
       const currentPeriod = format(new Date(), "MMMM yyyy", { locale: id });
-
       const filteredPayments = payments.filter(p => p.period === currentPeriod && (p.status === 'Lunas' || p.status === 'Belum Lunas'));
-
       const latestPayments = new Map<string, Payment>();
       
       filteredPayments.forEach(payment => {
@@ -43,6 +47,15 @@ export default function AdminDashboardPage() {
       const total = Array.from(latestPayments.values()).reduce((acc, p) => acc + p.amount, 0);
       setTotalCollected(total);
 
+      // Process disputes
+      const activeDisputes = disputes.filter(d => d.status === "Baru" || d.status === "Diproses");
+      setActiveDisputesCount(activeDisputes.length);
+
+      const today = format(new Date(), "yyyy-MM-dd");
+      const todayDisputes = disputes.filter(d => d.submittedDate === today);
+      setTodayDisputesCount(todayDisputes.length);
+
+
       setLoading(false);
     };
     fetchData();
@@ -56,6 +69,13 @@ export default function AdminDashboardPage() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
+  }
+  
+  const getTodayDisputesDescription = () => {
+    if (loading || todayDisputesCount === null) return " ";
+    if (todayDisputesCount === 0) return "Tidak ada sanggahan baru";
+    if (todayDisputesCount === 1) return "1 baru hari ini";
+    return `${todayDisputesCount} baru hari ini`;
   }
 
   return (
@@ -75,9 +95,9 @@ export default function AdminDashboardPage() {
         />
         <StatCard 
             title="Sanggahan Aktif" 
-            value="5" 
+            value={loading ? "Memuat..." : (activeDisputesCount ?? 0).toString()} 
             icon={MessageSquareWarning}
-            description="2 baru hari ini" 
+            description={getTodayDisputesDescription()}
         />
         <StatCard 
             title="Tingkat Pembayaran" 
