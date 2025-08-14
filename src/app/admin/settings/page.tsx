@@ -12,8 +12,9 @@ import { getAdminAccount, updateAdminUsername, updateAdminPassword } from "@/lib
 
 export default function AdminSettingsPage() {
     const { toast } = useToast();
-    const [currentUsername, setCurrentUsername] = useState("admin");
+    const [currentUsername, setCurrentUsername] = useState("memuat...");
     const [newUsername, setNewUsername] = useState("");
+    const [isLoading, setIsLoading] = useState(true);
 
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -21,11 +22,15 @@ export default function AdminSettingsPage() {
 
     useEffect(() => {
         const fetchAdmin = async () => {
+            setIsLoading(true);
             const admin = await getAdminAccount();
             if (admin) {
                 setCurrentUsername(admin.username);
                 setNewUsername(admin.username);
+            } else {
+                setCurrentUsername("Tidak ditemukan");
             }
+            setIsLoading(false);
         };
         fetchAdmin();
     }, []);
@@ -33,6 +38,8 @@ export default function AdminSettingsPage() {
 
     const handleUsernameSave = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!newUsername || newUsername === currentUsername) return;
+
         const success = await updateAdminUsername(newUsername);
         if (success) {
             toast({
@@ -101,11 +108,12 @@ export default function AdminSettingsPage() {
                             id="username"
                             value={newUsername}
                             onChange={(e) => setNewUsername(e.target.value)}
+                            disabled={isLoading}
                             required
                         />
                     </CardContent>
                     <CardFooter>
-                        <Button type="submit">Simpan Username</Button>
+                        <Button type="submit" disabled={isLoading || newUsername === currentUsername}>Simpan Username</Button>
                     </CardFooter>
                 </form>
             </Card>
