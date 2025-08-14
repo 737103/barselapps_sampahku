@@ -272,7 +272,7 @@ export const getPaymentById = async(id: string): Promise<Payment | null> => {
     }
 }
 
-export const recordPayment = async (citizenId: string, paymentData: Omit<Payment, 'id' | 'citizenId' | 'proofUrl' | 'citizen'>): Promise<Payment | null> => {
+export const recordPayment = async (citizenId: string, paymentData: Omit<Payment, 'id' | 'citizenId' | 'citizen'>): Promise<Payment | null> => {
     try {
         const citizen = await getCitizenById(citizenId);
         if (!citizen) throw new Error("Citizen not found");
@@ -282,7 +282,7 @@ export const recordPayment = async (citizenId: string, paymentData: Omit<Payment
             citizenId: citizenId,
             rt: citizen.rt,
             rw: citizen.rw,
-            proofUrl: "https://placehold.co/400x400.png", // placeholder
+            proofUrl: paymentData.proofUrl || null,
         };
 
         // Add payment document
@@ -353,6 +353,7 @@ export const addDispute = async (disputeData: Omit<Dispute, 'id' | 'submittedDat
             ...disputeData,
             submittedDate: format(new Date(), "yyyy-MM-dd"),
             status: "Baru" as const,
+            proofUrl: disputeData.proofUrl || null,
         };
         const docRef = await addDoc(disputesCollection, newDisputeData);
         return { id: docRef.id, ...newDisputeData };

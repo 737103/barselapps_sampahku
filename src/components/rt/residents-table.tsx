@@ -101,7 +101,7 @@ export function ResidentsTable({
     setIsDeleteAlertOpen(true);
   }
 
-  const handleSavePayment = async (paymentData: Omit<Payment, 'id' | 'citizenId' | 'status' | 'proofUrl'> & { citizenName: string }) => {
+  const handleSavePayment = async (paymentData: Omit<Payment, 'id' | 'citizenId'> & { citizenName: string }) => {
     if (!selectedCitizen) return;
 
     const newPayment = await recordPayment(selectedCitizen.id, paymentData);

@@ -15,7 +15,7 @@ export type Payment = {
   period: string; // e.g., "Juni 2024"
   amount: number;
   paymentDate: string;
-  proofUrl: string;
+  proofUrl: string | null;
   status: "Lunas" | "Belum Lunas" | "Tertunda";
   citizen?: Citizen;
   rt: string;
@@ -30,7 +30,7 @@ export type Dispute = {
   rt: string;
   rw: string;
   reason: string;
-  proofUrl?: string;
+  proofUrl?: string | null;
   submittedDate: string;
   status: "Baru" | "Diproses" | "Selesai" | "Ditolak";
 };

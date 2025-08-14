@@ -18,6 +18,7 @@ import { Input } from "../ui/input";
 import { Upload } from "lucide-react";
 import { addDispute } from "@/lib/firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { compressImage } from "@/lib/utils";
 
 type DisputeModalProps = {
   isOpen: boolean;
@@ -32,25 +33,30 @@ export function DisputeModal({
 }: DisputeModalProps) {
   const [reason, setReason] = useState("");
   const [fileName, setFileName] = useState<string | null>(null);
+  const [proofUrl, setProofUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
-          if (file.size > 500 * 1024) {
+          if (file.size > 2 * 1024 * 1024) { // 2MB limit
             toast({
               title: "Ukuran file terlalu besar",
-              description: "Ukuran file maksimal 500 KB.",
+              description: "Ukuran file maksimal 2 MB.",
               variant: "destructive"
             });
             e.target.value = ""; 
             setFileName(null);
+            setProofUrl(null);
             return;
           }
           setFileName(file.name);
+          const compressedDataUrl = await compressImage(file, 400, 400);
+          setProofUrl(compressedDataUrl);
       } else {
           setFileName(null);
+          setProofUrl(null);
       }
   };
   
@@ -79,7 +85,7 @@ export function DisputeModal({
         rt: payment.citizen.rt,
         rw: payment.citizen.rw,
         reason: reason,
-        proofUrl: "https://placehold.co/400x400.png" // placeholder
+        proofUrl: proofUrl
     };
 
     const result = await addDispute(disputeData);
@@ -91,6 +97,7 @@ export function DisputeModal({
         onOpenChange(false);
         setReason("");
         setFileName(null);
+        setProofUrl(null);
     } else {
         toast({
             title: "Gagal Mengirim Sanggahan",
@@ -135,7 +142,7 @@ export function DisputeModal({
                     <Input id="file-upload-modal" type="file" className="sr-only" accept="image/*" onChange={handleFileChange} />
                     {fileName && <p className="text-sm text-muted-foreground">{fileName}</p>}
                 </div>
-                <p className="text-xs text-muted-foreground">Lampirkan bukti transfer atau foto pendukung lainnya. Unggah gambar (maks. 500 KB).</p>
+                <p className="text-xs text-muted-foreground">Lampirkan bukti transfer atau foto pendukung lainnya. Unggah gambar (maks. 2 MB).</p>
             </div>
             </div>
             <DialogFooter>

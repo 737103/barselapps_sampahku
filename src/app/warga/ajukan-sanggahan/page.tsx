@@ -12,31 +12,37 @@ import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from "next/navigation";
 import { addDispute, getCitizenById } from "@/lib/firebase/firestore";
 import { DisputesHistoryTable } from "@/components/warga/disputes-history-table";
+import { compressImage } from "@/lib/utils";
 
 export default function AjukanSanggahanPage() {
   const [fileName, setFileName] = useState<string | null>(null);
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [proofUrl, setProofUrl] = useState<string | null>(null);
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const citizenId = searchParams.get("citizenId");
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
-          if (file.size > 500 * 1024) {
+          if (file.size > 2 * 1024 * 1024) { // 2MB limit
             toast({
               title: "Ukuran file terlalu besar",
-              description: "Ukuran file maksimal 500 KB.",
+              description: "Ukuran file maksimal 2 MB.",
               variant: "destructive"
             });
             e.target.value = ""; // Reset file input
             setFileName(null);
+            setProofUrl(null);
             return;
           }
           setFileName(file.name);
+          const compressedDataUrl = await compressImage(file, 400, 400);
+          setProofUrl(compressedDataUrl);
       } else {
           setFileName(null);
+          setProofUrl(null);
       }
   };
 
@@ -68,7 +74,7 @@ export default function AjukanSanggahanPage() {
         rt: citizen.rt,
         rw: citizen.rw,
         reason: reason,
-        proofUrl: "https://placehold.co/400x400.png" // Placeholder
+        proofUrl: proofUrl // Use state for proofUrl
     };
 
     const result = await addDispute(disputeData);
@@ -79,6 +85,7 @@ export default function AjukanSanggahanPage() {
         });
         setReason("");
         setFileName(null);
+        setProofUrl(null);
         // Maybe trigger a refresh of the history table here
     } else {
         toast({
@@ -124,7 +131,7 @@ export default function AjukanSanggahanPage() {
                   <Input id="file-upload" type="file" className="sr-only" accept="image/*" onChange={handleFileChange} />
                   {fileName && <p className="text-sm text-muted-foreground">{fileName}</p>}
               </div>
-              <p className="text-xs text-muted-foreground">Lampirkan bukti transfer atau foto pendukung lainnya. Unggah gambar (maks. 500 KB).</p>
+              <p className="text-xs text-muted-foreground">Lampirkan bukti transfer atau foto pendukung lainnya. Unggah gambar (maks. 2 MB).</p>
             </div>
           </CardContent>
           <CardFooter>

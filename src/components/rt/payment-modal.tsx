@@ -16,9 +16,9 @@ import { Calendar as CalendarIcon, Upload } from "lucide-react";
 import type { Citizen, Payment } from "@/lib/data";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Calendar } from "../ui/calendar";
-import { cn } from "@/lib/utils";
+import { cn, compressImage } from "@/lib/utils";
 import { format } from "date-fns";
-import React from "react";
+import React, { useState } from "react";
 import { id } from 'date-fns/locale';
 import { useToast } from "@/hooks/use-toast";
 
@@ -26,7 +26,7 @@ type PaymentModalProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   citizen: Citizen;
-  onSave: (paymentData: Omit<Payment, 'id' | 'citizenId' | 'proofUrl'> & { citizenName: string }) => void;
+  onSave: (paymentData: Omit<Payment, 'id' | 'citizenId'> & { citizenName: string }) => void;
 };
 
 export function PaymentModal({
@@ -35,10 +35,35 @@ export function PaymentModal({
   citizen,
   onSave,
 }: PaymentModalProps) {
-  const [date, setDate] = React.useState<Date>();
-  const [period, setPeriod] = React.useState<Date>();
-  const [amount, setAmount] = React.useState(25000);
+  const [date, setDate] = useState<Date>();
+  const [period, setPeriod] = useState<Date>();
+  const [amount, setAmount] = useState(25000);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [proofUrl, setProofUrl] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+          if (file.size > 2 * 1024 * 1024) { // 2MB limit
+            toast({
+              title: "Ukuran file terlalu besar",
+              description: "Ukuran file maksimal 2 MB.",
+              variant: "destructive"
+            });
+            e.target.value = ""; 
+            setFileName(null);
+            setProofUrl(null);
+            return;
+          }
+          setFileName(file.name);
+          const compressedDataUrl = await compressImage(file, 400, 400);
+          setProofUrl(compressedDataUrl);
+      } else {
+          setFileName(null);
+          setProofUrl(null);
+      }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +83,7 @@ export function PaymentModal({
             amount,
             status: paymentStatus,
             citizenName: citizen.name,
+            proofUrl: proofUrl || "https://placehold.co/400x400.png"
         });
     }
   }
@@ -154,8 +180,8 @@ export function PaymentModal({
                             <span>Unggah Gambar</span>
                         </label>
                     </Button>
-                    <Input id="file-upload" type="file" className="sr-only" accept="image/*"/>
-                    <p className="text-xs text-muted-foreground mt-1">Unggah gambar (maks. 500 KB).</p>
+                    <Input id="file-upload" type="file" className="sr-only" accept="image/*" onChange={handleFileChange} />
+                    <p className="text-xs text-muted-foreground mt-1">Unggah gambar (maks. 2 MB).</p>
                 </div>
             </div>
             </div>
