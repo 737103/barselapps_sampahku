@@ -1,6 +1,8 @@
 
 "use client";
 
+import { useState } from "react";
+import Link from 'next/link';
 import {
   Table,
   TableBody,
@@ -20,13 +22,23 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Citizen } from "@/lib/data";
+import { ViewCitizenDetailsModal } from "./view-citizen-details-modal";
 
 type AllResidentsTableProps = {
     residents: Citizen[];
 }
 
 export function AllResidentsTable({ residents = [] }: AllResidentsTableProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCitizen, setSelectedCitizen] = useState<Citizen | null>(null);
+
+  const handleViewDetails = (resident: Citizen) => {
+    setSelectedCitizen(resident);
+    setIsModalOpen(true);
+  };
+
   return (
+    <>
     <Card>
         <CardHeader>
             <CardTitle>Data Seluruh Warga</CardTitle>
@@ -62,12 +74,14 @@ export function AllResidentsTable({ residents = [] }: AllResidentsTableProps) {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleViewDetails(resident)}>
                                     Lihat Detail Warga
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                    Lihat Riwayat Pembayaran
-                                </DropdownMenuItem>
+                                <Link href={`/admin/manajemen-warga/${resident.id}`}>
+                                    <DropdownMenuItem>
+                                        Lihat Riwayat Pembayaran
+                                    </DropdownMenuItem>
+                                </Link>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </TableCell>
@@ -77,5 +91,13 @@ export function AllResidentsTable({ residents = [] }: AllResidentsTableProps) {
             </Table>
         </CardContent>
     </Card>
+    {selectedCitizen && (
+        <ViewCitizenDetailsModal
+            isOpen={isModalOpen}
+            onOpenChange={setIsModalOpen}
+            citizen={selectedCitizen}
+        />
+    )}
+    </>
   );
 }

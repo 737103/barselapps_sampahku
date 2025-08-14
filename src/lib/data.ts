@@ -53,6 +53,10 @@ export const payments: Payment[] = [
   { id: "p3", citizenId: "c3", period: "Juni 2024", amount: 25000, paymentDate: "", proofUrl: "", status: "Belum Lunas", citizen: citizens.find(c => c.id === 'c3')! },
   { id: "p4", citizenId: "c4", period: "Juni 2024", amount: 25000, paymentDate: "2024-06-10", proofUrl: "https://placehold.co/400x400.png", status: "Lunas", citizen: citizens.find(c => c.id === 'c4')! },
   { id: "p5", citizenId: "c1", period: "Juni 2024", amount: 25000, paymentDate: "2024-06-05", proofUrl: "https://placehold.co/400x400.png", status: "Lunas", citizen: citizens.find(c => c.id === 'c1')! },
+  { id: "p6", citizenId: "c1", period: "April 2024", amount: 25000, paymentDate: "2024-04-05", proofUrl: "https://placehold.co/400x400.png", status: "Lunas", citizen: citizens.find(c => c.id === 'c1')! },
+  { id: "p7", citizenId: "c2", period: "Mei 2024", amount: 25000, paymentDate: "2024-05-08", proofUrl: "https://placehold.co/400x400.png", status: "Lunas", citizen: citizens.find(c => c.id === 'c2')! },
+  { id: "p8", citizenId: "c3", period: "Mei 2024", amount: 25000, paymentDate: "2024-05-10", proofUrl: "https://placehold.co/400x400.png", status: "Lunas", citizen: citizens.find(c => c.id === 'c3')! },
+  { id: "p9", citizenId: "c4", period: "Mei 2024", amount: 25000, paymentDate: "2024-05-11", proofUrl: "https://placehold.co/400x400.png", status: "Lunas", citizen: citizens.find(c => c.id === 'c4')! },
 ];
 
 export const disputes: Dispute[] = [
