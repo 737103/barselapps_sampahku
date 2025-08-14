@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils";
 import { EditUsernameModal } from "./edit-username-modal";
 import { ChangePasswordModal } from "./change-password-modal";
 import { DeleteAccountAlert } from "./delete-account-alert";
-import { addRTAccount, deleteRTAccount, getRTAccounts, updateRTAccountUsername } from "@/lib/firebase/firestore";
+import { addRTAccount, deleteRTAccount, getRTAccounts, updateRTAccount, updateRTAccountUsername } from "@/lib/firebase/firestore";
 
 export function RtAccountsTable() {
   const [accounts, setAccounts] = useState<RTAccount[]>([]);
@@ -38,16 +38,16 @@ export function RtAccountsTable() {
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<RTAccount | null>(null);
-  const [deactivatedAccounts, setDeactivatedAccounts] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
+  const fetchAccounts = async () => {
+    setLoading(true);
+    const fetchedAccounts = await getRTAccounts();
+    setAccounts(fetchedAccounts);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const fetchAccounts = async () => {
-      setLoading(true);
-      const fetchedAccounts = await getRTAccounts();
-      setAccounts(fetchedAccounts);
-      setLoading(false);
-    };
     fetchAccounts();
   }, []);
 
@@ -109,11 +109,21 @@ export function RtAccountsTable() {
       setSelectedAccount(null);
   }
 
-  const handleResetPassword = (account: RTAccount) => {
-    toast({
-      title: "Password Direset",
-      description: `Password untuk akun ${account.username} telah direset menjadi '123456'.`,
-    });
+  const handleResetPassword = async (account: RTAccount) => {
+    const newPassword = "123456";
+    const success = await updateRTAccount(account.id, { password: newPassword });
+    if(success) {
+        setAccounts(prev => prev.map(acc => acc.id === account.id ? {...acc, password: newPassword } : acc));
+        toast({
+            title: "Password Direset",
+            description: `Password untuk akun ${account.username} telah direset menjadi '123456'.`,
+        });
+    } else {
+        toast({
+            title: "Gagal Mereset Password",
+            variant: "destructive"
+        });
+    }
   };
 
   const handleEditUsername = (account: RTAccount) => {
@@ -152,23 +162,22 @@ export function RtAccountsTable() {
   };
 
 
-  const toggleAccountStatus = (account: RTAccount) => {
-    const newDeactivatedAccounts = new Set(deactivatedAccounts);
-    if (newDeactivatedAccounts.has(account.id)) {
-      newDeactivatedAccounts.delete(account.id);
-      toast({
-        title: "Akun Diaktifkan",
-        description: `Akun ${account.username} telah diaktifkan kembali.`,
-      });
+  const toggleAccountStatus = async (account: RTAccount) => {
+    const newStatus = !account.isDeactivated;
+    const success = await updateRTAccount(account.id, { isDeactivated: newStatus });
+    if (success) {
+        setAccounts(prev => prev.map(acc => acc.id === account.id ? {...acc, isDeactivated: newStatus} : acc));
+        toast({
+            title: newStatus ? "Akun Dinonaktifkan" : "Akun Diaktifkan",
+            description: `Akun ${account.username} telah ${newStatus ? 'dinonaktifkan' : 'diaktifkan kembali'}.`,
+            variant: newStatus ? "destructive" : "default"
+        });
     } else {
-      newDeactivatedAccounts.add(account.id);
-      toast({
-        title: "Akun Dinonaktifkan",
-        description: `Akun ${account.username} telah dinonaktifkan.`,
-        variant: "destructive",
-      });
+        toast({
+            title: "Gagal Mengubah Status Akun",
+            variant: "destructive"
+        });
     }
-    setDeactivatedAccounts(newDeactivatedAccounts);
   };
 
   return (
@@ -191,26 +200,28 @@ export function RtAccountsTable() {
                       <TableHead>Username</TableHead>
                       <TableHead>RT/RW</TableHead>
                       <TableHead>Login Terakhir</TableHead>
-                      <TableHead>
-                      <span className="sr-only">Actions</span>
-                      </TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Aksi</TableHead>
                   </TableRow>
                   </TableHeader>
                   <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center">Memuat data...</TableCell>
+                      <TableCell colSpan={5} className="text-center">Memuat data...</TableCell>
                     </TableRow>
                   ) : accounts.length > 0 ? (
                     accounts.map((account) => {
-                      const isDeactivated = deactivatedAccounts.has(account.id);
+                      const isDeactivated = !!account.isDeactivated;
                       return (
-                        <TableRow key={account.id}>
+                        <TableRow key={account.id} className={cn(isDeactivated && "bg-muted/50")}>
                         <TableCell className={cn("font-medium", {
-                          "text-destructive": isDeactivated,
+                          "text-muted-foreground": isDeactivated,
                         })}>{account.username}</TableCell>
-                        <TableCell>{`RT ${account.rt} / RW ${account.rw}`}</TableCell>
-                        <TableCell>{account.lastLogin}</TableCell>
+                        <TableCell className={cn(isDeactivated && "text-muted-foreground")}>{`RT ${account.rt} / RW ${account.rw}`}</TableCell>
+                        <TableCell className={cn(isDeactivated && "text-muted-foreground")}>{account.lastLogin}</TableCell>
+                        <TableCell className={cn("font-semibold", isDeactivated ? 'text-destructive' : 'text-primary')}>
+                            {isDeactivated ? 'Nonaktif' : 'Aktif'}
+                        </TableCell>
                         <TableCell className="text-right">
                             <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -249,7 +260,7 @@ export function RtAccountsTable() {
                     })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center">Belum ada akun RT.</TableCell>
+                      <TableCell colSpan={5} className="text-center">Belum ada akun RT.</TableCell>
                     </TableRow>
                   )}
                   </TableBody>

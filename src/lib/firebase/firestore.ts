@@ -95,7 +95,7 @@ export const deleteCitizen = async (id: string): Promise<boolean> => {
 
 const rtAccountsCollection = collection(db, "rt_accounts");
 
-export const authenticateRT = async (username: string, password: string):Promise<RTAccount | null> => {
+export const authenticateRT = async (username: string, password: string): Promise<RTAccount | null> => {
     try {
         const q = query(rtAccountsCollection, where("username", "==", username));
         const snapshot = await getDocs(q);
@@ -108,9 +108,17 @@ export const authenticateRT = async (username: string, password: string):Promise
         const userDoc = snapshot.docs[0];
         const userData = userDoc.data() as RTAccount;
 
+        // Check if account is deactivated
+        if (userData.isDeactivated) {
+            console.log("Account is deactivated");
+            return null;
+        }
+
         // In a real app, you'd compare a hashed password.
         // For this prototype, we'll compare plaintext.
         if (userData.password === password) {
+            // Update last login timestamp
+            await updateDoc(userDoc.ref, { lastLogin: format(new Date(), "yyyy-MM-dd HH:mm:ss") });
             return { id: userDoc.id, ...userData };
         } else {
             console.log("Password does not match");
@@ -134,7 +142,7 @@ export const getRTAccounts = async (): Promise<RTAccount[]> => {
 
 export const addRTAccount = async (accountData: Omit<RTAccount, 'id' | 'lastLogin'>): Promise<RTAccount | null> => {
     try {
-        const newAccountData = { ...accountData, lastLogin: format(new Date(), "yyyy-MM-dd HH:mm:ss") };
+        const newAccountData = { ...accountData, lastLogin: "Belum pernah login", isDeactivated: false };
         const docRef = await addDoc(rtAccountsCollection, newAccountData);
         return { id: docRef.id, ...newAccountData };
     } catch (error) {
@@ -143,26 +151,23 @@ export const addRTAccount = async (accountData: Omit<RTAccount, 'id' | 'lastLogi
     }
 }
 
-export const updateRTAccountUsername = async (id: string, newUsername: string): Promise<boolean> => {
+export const updateRTAccount = async (id: string, data: Partial<RTAccount>): Promise<boolean> => {
     try {
         const docRef = doc(db, "rt_accounts", id);
-        await updateDoc(docRef, { username: newUsername });
+        await updateDoc(docRef, data);
         return true;
     } catch (error) {
-        console.error("Error updating RT account username: ", error);
+        console.error("Error updating RT account: ", error);
         return false;
     }
 }
 
+export const updateRTAccountUsername = async (id: string, newUsername: string): Promise<boolean> => {
+    return updateRTAccount(id, { username: newUsername });
+}
+
 export const updateRTAccountPassword = async (id: string, newPassword: string): Promise<boolean> => {
-    try {
-        const docRef = doc(db, "rt_accounts", id);
-        await updateDoc(docRef, { password: newPassword });
-        return true;
-    } catch (error) {
-        console.error("Error updating RT account password: ", error);
-        return false;
-    }
+    return updateRTAccount(id, { password: newPassword });
 }
 
 export const deleteRTAccount = async (id: string): Promise<boolean> => {

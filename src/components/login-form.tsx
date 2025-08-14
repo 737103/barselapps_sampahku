@@ -61,7 +61,7 @@ export function LoginForm() {
     } else {
       toast({
         title: "Login Gagal",
-        description: "Username atau password salah.",
+        description: "Username atau password salah, atau akun Anda dinonaktifkan.",
         variant: "destructive",
       });
     }

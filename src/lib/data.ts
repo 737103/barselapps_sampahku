@@ -40,6 +40,7 @@ export type RTAccount = {
   rt: string;
   rw: string;
   lastLogin: string;
+  isDeactivated?: boolean;
 };
 
 // Mock data is now replaced by Firestore
