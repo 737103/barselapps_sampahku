@@ -267,3 +267,70 @@ export const updateDisputeStatus = async (id: string, status: Dispute['status'])
         return false;
     }
 }
+
+// --- Admin Account Functions ---
+const adminsCollection = collection(db, "admins");
+const ADMIN_DOC_ID = "main_admin"; // Hardcoded ID for the single admin document
+
+export const authenticateAdmin = async (username: string, password: string):Promise<{username: string} | null> => {
+    try {
+        const docRef = doc(db, "admins", ADMIN_DOC_ID);
+        const docSnap = await getDoc(docRef);
+
+        if (!docSnap.exists()) {
+            console.log("Admin document not found. Please create it in Firestore.");
+            // Optional: Create a default admin if it doesn't exist
+            // await setDoc(docRef, { username: "admin", password: "admin" });
+            // return { username: "admin" };
+            return null;
+        }
+
+        const adminData = docSnap.data();
+
+        if (adminData.username === username && adminData.password === password) {
+            return { username: adminData.username };
+        }
+
+        return null;
+    } catch (error) {
+        console.error("Error authenticating admin: ", error);
+        return null;
+    }
+}
+
+export const getAdminAccount = async (): Promise<{username: string} | null> => {
+    try {
+        const docRef = doc(db, "admins", ADMIN_DOC_ID);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            return { username: docSnap.data().username };
+        }
+        return null;
+    } catch (error) {
+        console.error("Error getting admin account: ", error);
+        return null;
+    }
+}
+
+export const updateAdminUsername = async (newUsername: string): Promise<boolean> => {
+    try {
+        const docRef = doc(db, "admins", ADMIN_DOC_ID);
+        await updateDoc(docRef, { username: newUsername });
+        return true;
+    } catch (error) {
+        console.error("Error updating admin username: ", error);
+        return false;
+    }
+};
+
+export const updateAdminPassword = async (newPassword: string): Promise<boolean> => {
+    try {
+        const docRef = doc(db, "admins", ADMIN_DOC_ID);
+        await updateDoc(docRef, { password: newPassword });
+        return true;
+    } catch (error) {
+        console.error("Error updating admin password: ", error);
+        return false;
+    }
+};

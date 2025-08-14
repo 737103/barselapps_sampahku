@@ -20,7 +20,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { authenticateRT, getCitizenByNIK } from "@/lib/firebase/firestore";
+import { authenticateRT, getCitizenByNIK, authenticateAdmin } from "@/lib/firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 export function LoginForm() {
@@ -68,16 +68,18 @@ export function LoginForm() {
     setIsLoading(false);
   };
 
-  const handleAdminLogin = (event: React.SyntheticEvent) => {
+  const handleAdminLogin = async (event: React.SyntheticEvent) => {
     event.preventDefault();
     setIsLoading(true);
-    // This is a placeholder for admin login
-    if (adminUsername === "admin" && adminPassword === "admin") {
+    
+    const adminUser = await authenticateAdmin(adminUsername, adminPassword);
+
+    if (adminUser) {
       router.push("/admin");
     } else {
         toast({
             title: "Login Gagal",
-            description: "Username atau password salah.",
+            description: "Username atau password admin salah.",
             variant: "destructive",
         });
     }
