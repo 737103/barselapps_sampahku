@@ -223,6 +223,8 @@ export default function DataWargaPage() {
         setResidents={setResidents} 
         loading={loading}
         rtAccount={rtAccount}
+        title="Data Warga"
+        description={`Daftar lengkap warga yang terdaftar di RT ${rtAccount?.rt || '...'} / RW ${rtAccount?.rw || '...'}.`}
       />
     </div>
   );

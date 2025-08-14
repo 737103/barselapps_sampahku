@@ -37,9 +37,18 @@ type ResidentsTableProps = {
     setResidents: React.Dispatch<React.SetStateAction<Citizen[]>>;
     loading?: boolean;
     rtAccount: RTAccount | null;
+    title?: string;
+    description?: string;
 }
 
-export function ResidentsTable({ residents = [], setResidents = () => {}, loading = false, rtAccount }: ResidentsTableProps) {
+export function ResidentsTable({ 
+    residents = [], 
+    setResidents = () => {}, 
+    loading = false, 
+    rtAccount,
+    title = "Data Pembayaran Sampah",
+    description
+}: ResidentsTableProps) {
   const [selectedCitizen, setSelectedCitizen] = useState<Citizen | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -48,6 +57,7 @@ export function ResidentsTable({ residents = [], setResidents = () => {}, loadin
   const { toast } = useToast();
 
   const currentPeriod = format(new Date(), "MMMM yyyy", { locale: id });
+  const defaultDescription = `Status pembayaran iuran sampah bulan ini untuk RT ${rtAccount?.rt || '...'} / RW ${rtAccount?.rw || '...'}.`
 
   useEffect(() => {
     const fetchPayments = async () => {
@@ -197,8 +207,8 @@ export function ResidentsTable({ residents = [], setResidents = () => {}, loadin
     <Card>
         <CardHeader className="flex flex-row items-center justify-between">
             <div>
-                <CardTitle>Data Pembayaran Sampah</CardTitle>
-                <CardDescription>Status pembayaran iuran sampah bulan ini untuk RT {rtAccount?.rt || '...'} / RW {rtAccount?.rw || '...'}.</CardDescription>
+                <CardTitle>{title}</CardTitle>
+                <CardDescription>{description || defaultDescription}</CardDescription>
             </div>
              <Button onClick={handleSendReminder}>Kirim Pengingat</Button>
         </CardHeader>

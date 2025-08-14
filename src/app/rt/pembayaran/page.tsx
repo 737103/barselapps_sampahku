@@ -37,6 +37,8 @@ export default function PembayaranPage() {
          setResidents={setResidents} 
          loading={loading}
          rtAccount={rtAccount}
+         title="Catat Pembayaran Warga"
+         description="Pilih warga untuk mencatat pembayaran iuran sampah."
        />
     </>
   );
