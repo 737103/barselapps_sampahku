@@ -7,23 +7,34 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertCircle, FileText, Megaphone, X } from "lucide-react";
-import type { Notification } from "@/lib/data";
-import { getNotificationsForCitizen, markNotificationAsRead } from "@/lib/firebase/firestore";
+import type { Notification, Payment } from "@/lib/data";
+import { getNotificationsForCitizen, markNotificationAsRead, getPaymentsForCitizen } from "@/lib/firebase/firestore";
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
 
 export default function WargaDashboardPage() {
-  const currentStatus = "Lunas";
+  const [paymentStatus, setPaymentStatus] = useState<Payment['status'] | "Loading">("Loading");
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const citizenId = "vE3z7I5a1v4gYa3i9x8G"; // Hardcoded citizen for now
 
+  const currentPeriod = format(new Date(), "MMMM yyyy", { locale: id });
+
   useEffect(() => {
-    const fetchNotifications = async () => {
+    const fetchData = async () => {
       if (citizenId) {
+        // Fetch Notifications
         const fetchedNotifications = await getNotificationsForCitizen(citizenId);
         setNotifications(fetchedNotifications);
+
+        // Fetch Payment Status
+        setPaymentStatus("Loading");
+        const payments = await getPaymentsForCitizen(citizenId);
+        const currentMonthPayment = payments.find(p => p.period === currentPeriod);
+        setPaymentStatus(currentMonthPayment?.status ?? "Belum Lunas");
       }
     };
-    fetchNotifications();
-  }, [citizenId]);
+    fetchData();
+  }, [citizenId, currentPeriod]);
 
   const handleDismissNotification = async (notificationId: string) => {
     const success = await markNotificationAsRead(notificationId);
@@ -63,18 +74,24 @@ export default function WargaDashboardPage() {
         <Card>
             <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                    <CardTitle>Status Iuran Bulan Ini (Juni 2024)</CardTitle>
+                    <CardTitle>Status Iuran Bulan Ini ({currentPeriod})</CardTitle>
                     <CardDescription>Status pembayaran iuran sampah Anda untuk bulan berjalan.</CardDescription>
                 </div>
-                <Button variant="outline"><FileText className="mr-2 h-4 w-4"/>Unduh Kuitansi</Button>
+                {paymentStatus === "Lunas" && (
+                    <Button variant="outline"><FileText className="mr-2 h-4 w-4"/>Unduh Kuitansi</Button>
+                )}
             </CardHeader>
             <CardContent>
-                {currentStatus === "Lunas" ? (
+                {paymentStatus === "Loading" ? (
+                     <div className="flex items-center gap-4 p-6 bg-muted rounded-lg">
+                        <p>Memeriksa status pembayaran...</p>
+                    </div>
+                ) : paymentStatus === "Lunas" ? (
                     <div className="flex items-center gap-4 p-6 bg-primary/10 rounded-lg">
                         <CheckCircle2 className="h-10 w-10 text-primary"/>
                         <div>
                             <p className="text-2xl font-bold font-headline text-primary">Lunas</p>
-                            <p className="text-muted-foreground">Terima kasih! Pembayaran Anda untuk bulan Juni 2024 telah kami terima.</p>
+                            <p className="text-muted-foreground">Terima kasih! Pembayaran Anda untuk bulan {currentPeriod} telah kami terima.</p>
                         </div>
                     </div>
                 ) : (
@@ -82,7 +99,7 @@ export default function WargaDashboardPage() {
                         <AlertCircle className="h-10 w-10 text-destructive"/>
                         <div>
                             <p className="text-2xl font-bold font-headline text-destructive">Belum Lunas</p>
-                            <p className="text-muted-foreground">Pembayaran untuk bulan Juni 2024 belum kami terima. Mohon segera lakukan pembayaran.</p>
+                            <p className="text-muted-foreground">Pembayaran untuk bulan {currentPeriod} belum kami terima. Mohon segera lakukan pembayaran.</p>
                         </div>
                     </div>
                 )}
