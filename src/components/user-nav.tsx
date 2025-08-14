@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +23,10 @@ type UserNavProps = {
 };
 
 export function UserNav({ name, email, role }: UserNavProps) {
+  const searchParams = useSearchParams();
+  const accountId = searchParams.get('accountId');
+  const citizenId = searchParams.get('citizenId');
+
   const initials = name
     .split(" ")
     .map((n) => n[0])
@@ -29,19 +34,21 @@ export function UserNav({ name, email, role }: UserNavProps) {
 
   const getRoleBasedPath = (path: 'profile' | 'settings' | 'support') => {
       const base = role.toLowerCase().replace(' ', '');
+      let url = '/';
+
       if (base === 'admin') {
-        if (path === 'profile') return '/admin/settings'; // Admin profile is on settings page
-        return `/admin/${path}`;
+        if (path === 'profile') url = '/admin/settings'; // Admin profile is on settings page
+        else url = `/admin/${path}`;
       }
-      if (base === 'ketuart') {
-        if (path === 'profile') return '/rt/settings'; // RT profile is on settings page
-         return `/rt/${path}`;
+      else if (base === 'ketuart') {
+        if (path === 'profile') url = `/rt/settings?accountId=${accountId}`; // RT profile is on settings page
+        else url = `/rt/${path}?accountId=${accountId}`;
       }
-       if (base === 'warga') {
-        if (path === 'settings') return '/warga/profile'; // Warga settings is on profile page
-        return `/warga/${path}`;
+      else if (base === 'warga') {
+        if (path === 'settings') url = `/warga/profile?citizenId=${citizenId}`; // Warga settings is on profile page
+        else url = `/warga/${path}?citizenId=${citizenId}`;
       }
-      return '/';
+      return url;
   }
 
   return (

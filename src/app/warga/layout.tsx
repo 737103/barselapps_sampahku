@@ -1,28 +1,47 @@
+
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import React, { useEffect, useState } from "react";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { HorizontalNav } from "@/components/horizontal-nav";
 import { LayoutDashboard, History, MessageSquarePlus, Settings, LifeBuoy } from "lucide-react";
+import type { Citizen } from "@/lib/data";
+import { getCitizenById } from "@/lib/firebase/firestore";
 
-export default function WargaLayout({
+function WargaLayoutContent({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const citizenId = searchParams.get("citizenId");
+
+  const [citizen, setCitizen] = useState<Citizen | null>(null);
+
+  useEffect(() => {
+    const fetchCitizen = async () => {
+      if (citizenId) {
+        const citizenData = await getCitizenById(citizenId);
+        setCitizen(citizenData);
+      }
+    };
+    fetchCitizen();
+  }, [citizenId]);
+
   const wargaUser = {
-    name: "Budi Santoso",
-    email: "budi.s@example.com",
+    name: citizen?.name || "Memuat...",
+    email: citizen?.nik ? `NIK: ${citizen.nik}` : "memuat...",
     role: "Warga" as const,
   };
 
   const navItems = [
-    { href: "/warga", label: "Dashboard", icon: LayoutDashboard, isActive: pathname === '/warga' },
-    { href: "/warga/riwayat-pembayaran", label: "Riwayat Pembayaran", icon: History, isActive: pathname.startsWith('/warga/riwayat-pembayaran') },
-    { href: "/warga/ajukan-sanggahan", label: "Ajukan Sanggahan", icon: MessageSquarePlus, isActive: pathname.startsWith('/warga/ajukan-sanggahan') },
-    { href: "/warga/profile", label: "Profile", icon: Settings, isActive: pathname.startsWith('/warga/profile') },
-    { href: "/warga/support", label: "Support", icon: LifeBuoy, isActive: pathname.startsWith('/warga/support') },
+    { href: `/warga?citizenId=${citizenId}`, label: "Dashboard", icon: LayoutDashboard, isActive: pathname === '/warga' },
+    { href: `/warga/riwayat-pembayaran?citizenId=${citizenId}`, label: "Riwayat Pembayaran", icon: History, isActive: pathname.startsWith('/warga/riwayat-pembayaran') },
+    { href: `/warga/ajukan-sanggahan?citizenId=${citizenId}`, label: "Ajukan Sanggahan", icon: MessageSquarePlus, isActive: pathname.startsWith('/warga/ajukan-sanggahan') },
+    { href: `/warga/profile?citizenId=${citizenId}`, label: "Profile", icon: Settings, isActive: pathname.startsWith('/warga/profile') },
+    { href: `/warga/support?citizenId=${citizenId}`, label: "Support", icon: LifeBuoy, isActive: pathname.startsWith('/warga/support') },
   ];
 
   return (
@@ -34,4 +53,16 @@ export default function WargaLayout({
       </main>
     </div>
   );
+}
+
+export default function WargaLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <WargaLayoutContent>{children}</WargaLayoutContent>
+    </React.Suspense>
+  )
 }

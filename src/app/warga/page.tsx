@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { HistoryTable } from "@/components/warga/history-table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -15,7 +16,8 @@ import { id } from "date-fns/locale";
 export default function WargaDashboardPage() {
   const [paymentStatus, setPaymentStatus] = useState<Payment['status'] | "Loading">("Loading");
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const citizenId = "vE3z7I5a1v4gYa3i9x8G"; // Hardcoded citizen for now
+  const searchParams = useSearchParams();
+  const citizenId = searchParams.get("citizenId");
 
   const currentPeriod = format(new Date(), "MMMM yyyy", { locale: id });
 

@@ -40,7 +40,7 @@ export function LoginForm() {
     const citizen = await getCitizenByNIK(nik);
     if (citizen) {
       // In a real app, you'd set some session/context here
-      router.push("/warga");
+      router.push(`/warga?citizenId=${citizen.id}`);
     } else {
       toast({
         title: "Login Gagal",

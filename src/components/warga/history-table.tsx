@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   Table,
   TableBody,
@@ -32,8 +33,8 @@ export function HistoryTable() {
     const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
     const [history, setHistory] = useState<Payment[]>([]);
     const [loading, setLoading] = useState(true);
-    // Hardcoded citizen for now, replace with actual logged in user
-    const citizenId = "vE3z7I5a1v4gYa3i9x8G"; 
+    const searchParams = useSearchParams();
+    const citizenId = searchParams.get("citizenId");
 
     useEffect(() => {
         const fetchHistory = async () => {

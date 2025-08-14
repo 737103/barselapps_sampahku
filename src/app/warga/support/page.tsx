@@ -1,4 +1,6 @@
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import React from 'react';
 
 export default function WargaSupportPage() {
   return (
