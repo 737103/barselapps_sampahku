@@ -1,17 +1,16 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+
+"use client";
+
+import { useState } from "react";
+import { AllResidentsTable } from "@/components/admin/all-residents-table";
+import { citizens, type Citizen } from "@/lib/data";
 
 export default function ManajemenWargaPage() {
+  const [allResidents] = useState<Citizen[]>(citizens);
+
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle>Manajemen Warga</CardTitle>
-          <CardDescription>Kelola data semua warga yang terdaftar di sistem.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p>Halaman untuk manajemen warga sedang dalam pengembangan.</p>
-        </CardContent>
-      </Card>
+      <AllResidentsTable residents={allResidents} />
     </>
   );
 }
