@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import type { Payment } from '@/lib/data';
+import { Download } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 type StatusVariant = "default" | "secondary" | "destructive";
 
@@ -27,6 +29,37 @@ type CitizenPaymentHistoryTableProps = {
 }
 
 export function CitizenPaymentHistoryTable({ payments = [] }: CitizenPaymentHistoryTableProps) {
+  const { toast } = useToast();
+  
+  const handleDownload = (proofUrl: string | null, period: string, citizenName: string) => {
+    if (!proofUrl) {
+      toast({
+        title: "Gagal Mengunduh",
+        description: "Tidak ada bukti pembayaran yang tersedia untuk diunduh.",
+        variant: "destructive"
+      });
+      return;
+    };
+    
+    // Create a temporary link element
+    const link = document.createElement('a');
+    link.href = proofUrl;
+
+    const fileExtension = proofUrl.split('.').pop()?.split('?')[0] || 'png';
+    const fileName = `Bukti_Bayar_${citizenName.replace(/ /g, '_')}_${period.replace(/ /g, '_')}.${fileExtension}`;
+    link.download = fileName;
+    
+    // Append to the document, click it, and remove it
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Berhasil Mengunduh",
+      description: `File ${fileName} telah diunduh.`
+    });
+  }
+  
   return (
     <Table>
         <TableHeader>
@@ -36,6 +69,7 @@ export function CitizenPaymentHistoryTable({ payments = [] }: CitizenPaymentHist
             <TableHead>Jumlah</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Bukti</TableHead>
+            <TableHead className="text-right">Aksi</TableHead>
         </TableRow>
         </TableHeader>
         <TableBody>
@@ -62,11 +96,22 @@ export function CitizenPaymentHistoryTable({ payments = [] }: CitizenPaymentHist
                         />
                     ) : "-"}
                 </TableCell>
+                 <TableCell className="text-right">
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleDownload(payment.proofUrl, payment.period, payment.citizen?.name || 'warga')}
+                        disabled={!payment.proofUrl}
+                    >
+                        <Download className="mr-2 h-4 w-4"/>
+                        Unduh Bukti
+                    </Button>
+                </TableCell>
                 </TableRow>
             ))
         ) : (
             <TableRow>
-                <TableCell colSpan={5} className="text-center">
+                <TableCell colSpan={6} className="text-center">
                     Tidak ada riwayat pembayaran.
                 </TableCell>
             </TableRow>
@@ -75,3 +120,4 @@ export function CitizenPaymentHistoryTable({ payments = [] }: CitizenPaymentHist
     </Table>
   );
 }
+
