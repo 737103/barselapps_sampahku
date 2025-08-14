@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { type Payment } from "@/lib/data";
-import { getAllPayments } from "@/lib/firebase/firestore";
+import { getAllPayments, updatePayment } from "@/lib/firebase/firestore";
 import {
   Table,
   TableBody,
@@ -30,6 +30,8 @@ import { id } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import { EditPaymentModal } from "./edit-payment-modal";
+import { useToast } from "@/hooks/use-toast";
 
 
 type StatusVariant = "default" | "secondary" | "destructive";
@@ -47,18 +49,46 @@ export function AllPaymentsTable() {
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState<Date | undefined>();
   const [currentPage, setCurrentPage] = useState(1);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const { toast } = useToast();
   
+  const fetchPayments = async () => {
+      setLoading(true);
+      const payments = await getAllPayments();
+      payments.sort((a,b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
+      setAllPayments(payments);
+      setLoading(false);
+  }
+
   useEffect(() => {
-    const fetchPayments = async () => {
-        setLoading(true);
-        const payments = await getAllPayments();
-        // Sort by payment date descending
-        payments.sort((a,b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
-        setAllPayments(payments);
-        setLoading(false);
-    }
     fetchPayments();
   }, []);
+
+  const handleEditClick = (payment: Payment) => {
+    setSelectedPayment(payment);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSavePayment = async (paymentToUpdate: Payment) => {
+    const success = await updatePayment(paymentToUpdate.id, paymentToUpdate);
+    if (success) {
+      toast({
+        title: "Pembayaran Diperbarui",
+        description: "Data pembayaran telah berhasil diperbarui.",
+      });
+      // Refetch or update state locally
+      setAllPayments(prev => prev.map(p => p.id === paymentToUpdate.id ? paymentToUpdate : p));
+    } else {
+      toast({
+        title: "Gagal Memperbarui",
+        description: "Terjadi kesalahan saat memperbarui pembayaran.",
+        variant: "destructive",
+      });
+    }
+    setIsEditModalOpen(false);
+    setSelectedPayment(null);
+  };
 
   const filteredPayments = useMemo(() => {
     if (!selectedPeriod) {
@@ -180,7 +210,7 @@ export function AllPaymentsTable() {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                     <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                                    <DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleEditClick(payment)}>
                                         Edit
                                     </DropdownMenuItem>
                                     <DropdownMenuItem className="text-destructive">
@@ -223,6 +253,14 @@ export function AllPaymentsTable() {
             </CardFooter>
         )}
       </Card>
+      {selectedPayment && (
+        <EditPaymentModal 
+            isOpen={isEditModalOpen}
+            onOpenChange={setIsEditModalOpen}
+            payment={selectedPayment}
+            onSave={handleSavePayment}
+        />
+      )}
     </>
   );
 }

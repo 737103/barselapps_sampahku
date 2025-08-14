@@ -302,6 +302,19 @@ export const recordPayment = async (citizenId: string, paymentData: Omit<Payment
     }
 }
 
+export const updatePayment = async (id: string, paymentData: Partial<Payment>): Promise<boolean> => {
+    try {
+        const docRef = doc(db, "payments", id);
+        // We don't want to save the 'citizen' object in the payment document
+        const { citizen, ...dataToUpdate } = paymentData;
+        await updateDoc(docRef, dataToUpdate);
+        return true;
+    } catch (error) {
+        console.error("Error updating payment: ", error);
+        return false;
+    }
+};
+
 // --- Dispute Functions ---
 const disputesCollection = collection(db, "disputes");
 
