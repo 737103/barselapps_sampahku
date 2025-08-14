@@ -32,6 +32,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { PaymentModal } from "@/components/rt/payment-modal";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import Image from "next/image";
 
 
 type StatusVariant = "default" | "secondary" | "destructive";
@@ -216,13 +217,14 @@ export default function PembayaranPage() {
                     <TableHead>NIK</TableHead>
                     <TableHead>Status Pembayaran</TableHead>
                     <TableHead>Periode</TableHead>
+                    <TableHead>Bukti</TableHead>
                     <TableHead className="text-right">Aksi</TableHead>
                 </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center">Memuat data...</TableCell>
+                      <TableCell colSpan={6} className="text-center">Memuat data...</TableCell>
                     </TableRow>
                   ) : paginatedResidents.length > 0 ? (
                     paginatedResidents.map((resident) => {
@@ -238,6 +240,20 @@ export default function PembayaranPage() {
                               </Badge>
                           </TableCell>
                           <TableCell>{payment?.period || "-"}</TableCell>
+                           <TableCell>
+                            {payment?.proofUrl ? (
+                                <a href={payment.proofUrl} target="_blank" rel="noopener noreferrer">
+                                <Image 
+                                    src={payment.proofUrl} 
+                                    alt={`Bukti ${payment.period}`}
+                                    width={40}
+                                    height={40}
+                                    className="rounded-md object-cover"
+                                    data-ai-hint="receipt"
+                                />
+                            </a>
+                            ) : '-'}
+                        </TableCell>
                           <TableCell className="text-right">
                             <Button variant="outline" size="sm" onClick={() => handleRecordPayment(resident)}>
                                 Catat Pembayaran
@@ -248,7 +264,7 @@ export default function PembayaranPage() {
                     })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center">Belum ada warga terdaftar.</TableCell>
+                      <TableCell colSpan={6} className="text-center">Belum ada warga terdaftar.</TableCell>
                     </TableRow>
                   )}
                 </TableBody>
@@ -287,3 +303,5 @@ export default function PembayaranPage() {
     </>
   );
 }
+
+    
