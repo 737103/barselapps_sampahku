@@ -197,8 +197,8 @@ export function ResidentsTable({ residents = [], setResidents = () => {}, loadin
     <Card>
         <CardHeader className="flex flex-row items-center justify-between">
             <div>
-                <CardTitle>Data Warga RT {rtAccount?.rt || '...'} / RW {rtAccount?.rw || '...'}</CardTitle>
-                <CardDescription>Status pembayaran iuran sampah bulan ini.</CardDescription>
+                <CardTitle>Data Pembayaran Sampah</CardTitle>
+                <CardDescription>Status pembayaran iuran sampah bulan ini untuk RT {rtAccount?.rt || '...'} / RW {rtAccount?.rw || '...'}.</CardDescription>
             </div>
              <Button onClick={handleSendReminder}>Kirim Pengingat</Button>
         </CardHeader>
