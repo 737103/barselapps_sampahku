@@ -51,6 +51,7 @@ export type Notification = {
     createdAt: string; 
     isRead: boolean;
     type: 'payment_reminder' | 'general';
+    period?: string; // e.g., "Agustus 2024"
 }
 
 // Mock data is now replaced by Firestore

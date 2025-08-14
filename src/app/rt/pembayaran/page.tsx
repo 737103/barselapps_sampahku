@@ -141,6 +141,7 @@ export default function PembayaranPage() {
             citizenId: resident.id,
             message: `Mohon segera lakukan pembayaran iuran sampah untuk periode ${formattedPeriod}.`,
             type: 'payment_reminder' as const,
+            period: formattedPeriod,
         };
         const result = await createNotification(notificationData);
         if (result) {
@@ -303,5 +304,3 @@ export default function PembayaranPage() {
     </>
   );
 }
-
-    

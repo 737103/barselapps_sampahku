@@ -1,5 +1,5 @@
 import { db } from "@/lib/firebase";
-import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, query, where, getDoc, serverTimestamp } from "firebase/firestore";
+import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, query, where, getDoc, serverTimestamp, writeBatch } from "firebase/firestore";
 import type { Citizen, RTAccount, Payment, Dispute, Notification } from "../data";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
@@ -246,7 +246,26 @@ export const recordPayment = async (citizenId: string, paymentData: Omit<Payment
             proofUrl: "https://placehold.co/400x400.png", // placeholder
         };
 
+        // Add payment document
         const docRef = await addDoc(paymentsCollection, newPaymentData);
+
+        // Mark relevant payment reminder notifications as read
+        const notificationsQuery = query(
+            notificationsCollection, 
+            where("citizenId", "==", citizenId),
+            where("type", "==", "payment_reminder"),
+            where("period", "==", paymentData.period),
+            where("isRead", "==", false)
+        );
+        const notificationsSnapshot = await getDocs(notificationsQuery);
+        if (!notificationsSnapshot.empty) {
+            const batch = writeBatch(db);
+            notificationsSnapshot.docs.forEach(notificationDoc => {
+                batch.update(notificationDoc.ref, { isRead: true });
+            });
+            await batch.commit();
+            console.log(`Marked ${notificationsSnapshot.size} notifications as read for citizen ${citizenId} for period ${paymentData.period}`);
+        }
         
         return {
             id: docRef.id,

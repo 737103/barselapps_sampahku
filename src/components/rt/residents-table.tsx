@@ -182,6 +182,7 @@ export function ResidentsTable({
             citizenId: resident.id,
             message: `Mohon segera lakukan pembayaran iuran sampah untuk periode ${currentPeriod}.`,
             type: 'payment_reminder' as const,
+            period: currentPeriod,
         };
         const result = await createNotification(notificationData);
         if (result) {
