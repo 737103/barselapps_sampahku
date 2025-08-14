@@ -15,6 +15,7 @@ export default function AdminDashboardPage() {
   const [totalCollected, setTotalCollected] = useState<number | null>(null);
   const [activeDisputesCount, setActiveDisputesCount] = useState<number | null>(null);
   const [todayDisputesCount, setTodayDisputesCount] = useState<number | null>(null);
+  const [paymentRate, setPaymentRate] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,7 +29,8 @@ export default function AdminDashboardPage() {
       const [citizens, payments, disputes] = await Promise.all([citizensPromise, paymentsPromise, disputesPromise]);
 
       // Process citizens
-      setTotalCitizens(citizens.length);
+      const totalCitizenCount = citizens.length;
+      setTotalCitizens(totalCitizenCount);
 
       // Process and process payments
       const currentPeriod = format(new Date(), "MMMM yyyy", { locale: id });
@@ -44,8 +46,19 @@ export default function AdminDashboardPage() {
         }
       });
       
-      const total = Array.from(latestPayments.values()).reduce((acc, p) => acc + p.amount, 0);
+      const paymentsArray = Array.from(latestPayments.values());
+      const total = paymentsArray.reduce((acc, p) => acc + p.amount, 0);
       setTotalCollected(total);
+      
+      // Calculate Payment Rate
+      if (totalCitizenCount > 0) {
+        const paidCitizensCount = paymentsArray.filter(p => p.status === 'Lunas').length;
+        const rate = (paidCitizensCount / totalCitizenCount) * 100;
+        setPaymentRate(`${rate.toFixed(1)}%`);
+      } else {
+        setPaymentRate("0%");
+      }
+
 
       // Process disputes
       const activeDisputes = disputes.filter(d => d.status === "Baru" || d.status === "Diproses");
@@ -101,9 +114,9 @@ export default function AdminDashboardPage() {
         />
         <StatCard 
             title="Tingkat Pembayaran" 
-            value="92.8%" 
+            value={loading ? "Memuat..." : (paymentRate ?? '0%')} 
             icon={TrendingUp}
-            description="+1.2% from last month" 
+            description={!loading ? "berdasarkan data lunas bulan ini" : " "} 
         />
       </div>
       <div className="grid gap-4 md:gap-8">
