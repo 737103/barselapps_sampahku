@@ -26,6 +26,7 @@ import { type Dispute, type Payment, type Citizen } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { CitizenDetailModal } from "./citizen-detail-modal";
 import { getAllDisputes, getPaymentById, updateDisputeStatus } from "@/lib/firebase/firestore";
+import Image from "next/image";
 
 type BadgeVariant = "destructive" | "secondary" | "default" | "outline";
 
@@ -106,15 +107,14 @@ export function DisputesTable() {
                     <TableHead>RT/RW</TableHead>
                     <TableHead>Tanggal</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>
-                    <span className="sr-only">Actions</span>
-                    </TableHead>
+                    <TableHead>Bukti</TableHead>
+                    <TableHead className="text-right">Aksi</TableHead>
                 </TableRow>
                 </TableHeader>
                 <TableBody>
                 {loading ? (
                     <TableRow>
-                        <TableCell colSpan={5} className="text-center">Memuat data sanggahan...</TableCell>
+                        <TableCell colSpan={6} className="text-center">Memuat data sanggahan...</TableCell>
                     </TableRow>
                 ) : disputes.length > 0 ? (
                     disputes.map((dispute) => (
@@ -126,6 +126,22 @@ export function DisputesTable() {
                             <Badge variant={badgeVariant[dispute.status]}>{dispute.status}</Badge>
                         </TableCell>
                         <TableCell>
+                            {dispute.proofUrl ? (
+                                <a href={dispute.proofUrl} target="_blank" rel="noopener noreferrer">
+                                <Image 
+                                    src={dispute.proofUrl} 
+                                    alt={`Bukti Sanggahan`}
+                                    width={40}
+                                    height={40}
+                                    className="rounded-md object-cover"
+                                    data-ai-hint="receipt"
+                                />
+                                </a>
+                            ) : (
+                                <p className="text-muted-foreground">-</p>
+                            )}
+                        </TableCell>
+                        <TableCell className="text-right">
                             <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button aria-haspopup="true" size="icon" variant="ghost">
@@ -156,7 +172,7 @@ export function DisputesTable() {
                     ))
                 ) : (
                     <TableRow>
-                        <TableCell colSpan={5} className="text-center">Tidak ada sanggahan terbaru.</TableCell>
+                        <TableCell colSpan={6} className="text-center">Tidak ada sanggahan terbaru.</TableCell>
                     </TableRow>
                 )}
                 </TableBody>
