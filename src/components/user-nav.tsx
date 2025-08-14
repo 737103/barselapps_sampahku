@@ -86,13 +86,6 @@ export function UserNav({ name, email, role }: UserNavProps) {
           </Link>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-         <Link href={getRoleBasedPath('support')}>
-            <DropdownMenuItem>
-            <LifeBuoy className="mr-2 h-4 w-4" />
-            <span>Support</span>
-            </DropdownMenuItem>
-         </Link>
-        <DropdownMenuSeparator />
         <Link href="/">
             <DropdownMenuItem>
                 <LogOut className="mr-2 h-4 w-4" />

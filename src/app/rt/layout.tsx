@@ -32,7 +32,6 @@ function RTLayoutContent({ children }: { children: React.ReactNode }) {
     { href: `/rt/data-warga?accountId=${accountId}`, label: "Data Warga", icon: Users, isActive: pathname.startsWith('/rt/data-warga') },
     { href: `/rt/laporan?accountId=${accountId}`, label: "Laporan", icon: FileText, isActive: pathname.startsWith('/rt/laporan') },
     { href: `/rt/settings?accountId=${accountId}`, label: "Settings", icon: Settings, isActive: pathname.startsWith('/rt/settings') },
-    { href: `/rt/support?accountId=${accountId}`, label: "Support", icon: LifeBuoy, isActive: pathname.startsWith('/rt/support') },
   ];
 
   const user = {

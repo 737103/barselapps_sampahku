@@ -1,9 +1,10 @@
+
 "use client";
 
 import { usePathname } from "next/navigation";
 import { DashboardHeader } from "@/components/dashboard-header";
 import { HorizontalNav } from "@/components/horizontal-nav";
-import { LayoutDashboard, Users, MessageSquareWarning, Settings, LifeBuoy, KeyRound, History } from "lucide-react";
+import { LayoutDashboard, Users, MessageSquareWarning, Settings, KeyRound, History } from "lucide-react";
 
 export default function AdminLayout({
   children,
@@ -24,7 +25,6 @@ export default function AdminLayout({
     { href: "/admin/manajemen-pencatatan", label: "Manajemen Pencatatan", icon: History, isActive: pathname.startsWith('/admin/manajemen-pencatatan') },
     { href: "/admin/sanggahan", label: "Sanggahan", icon: MessageSquareWarning, isActive: pathname.startsWith('/admin/sanggahan') },
     { href: "/admin/settings", label: "Settings", icon: Settings, isActive: pathname.startsWith('/admin/settings') },
-    { href: "/admin/support", label: "Support", icon: LifeBuoy, isActive: pathname.startsWith('/admin/support') },
   ];
 
   return (

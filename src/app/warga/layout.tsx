@@ -41,7 +41,6 @@ function WargaLayoutContent({
     { href: `/warga/riwayat-pembayaran?citizenId=${citizenId}`, label: "Riwayat Pembayaran", icon: History, isActive: pathname.startsWith('/warga/riwayat-pembayaran') },
     { href: `/warga/ajukan-sanggahan?citizenId=${citizenId}`, label: "Ajukan Sanggahan", icon: MessageSquarePlus, isActive: pathname.startsWith('/warga/ajukan-sanggahan') },
     { href: `/warga/profile?citizenId=${citizenId}`, label: "Profile", icon: Settings, isActive: pathname.startsWith('/warga/profile') },
-    { href: `/warga/support?citizenId=${citizenId}`, label: "Support", icon: LifeBuoy, isActive: pathname.startsWith('/warga/support') },
   ];
 
   return (
