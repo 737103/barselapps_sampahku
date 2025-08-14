@@ -1,23 +1,38 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { StatCard } from "@/components/stat-card";
 import { ResidentsTable } from "@/components/rt/residents-table";
 import { DollarSign, Users, AlertTriangle, PieChart } from "lucide-react";
-import { rtResidents, type Citizen } from "@/lib/data";
+import { type Citizen } from "@/lib/data";
+import { getCitizensByRT } from "@/lib/firebase/firestore";
 
 export default function RTDashboardPage() {
-  const [residents, setResidents] = useState<Citizen[]>(rtResidents);
+  const [residents, setResidents] = useState<Citizen[]>([]);
+  const [loading, setLoading] = useState(true);
+  const currentRT = "001"; // Assuming static RT for now
+  const currentRW = "001"; // Assuming static RW for now
+
+  useEffect(() => {
+    const fetchCitizens = async () => {
+      setLoading(true);
+      const fetchedCitizens = await getCitizensByRT(currentRT, currentRW);
+      setResidents(fetchedCitizens);
+      setLoading(false);
+    };
+    fetchCitizens();
+  }, [currentRT, currentRW]);
+
 
   return (
     <>
       <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
         <StatCard 
             title="Warga di RT Anda" 
-            value="45" 
+            value={residents.length.toString()} 
             icon={Users}
-            description="25 Pria, 20 Wanita" 
+            description="Total warga terdaftar" 
         />
         <StatCard 
             title="Iuran Terkumpul (Juni)" 
@@ -39,7 +54,7 @@ export default function RTDashboardPage() {
         />
       </div>
       <div className="grid gap-4 md:gap-8">
-        <ResidentsTable residents={residents} setResidents={setResidents} />
+        <ResidentsTable residents={residents} setResidents={setResidents} loading={loading}/>
       </div>
     </>
   );
