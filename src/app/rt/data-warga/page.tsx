@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { type Citizen } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
-import { addCitizen, getCitizensByRT } from "@/lib/firebase/firestore";
+import { addCitizen, getCitizensByRT, getCitizenByNIK } from "@/lib/firebase/firestore";
 
 export default function DataWargaPage() {
   const [residents, setResidents] = useState<Citizen[]>([]);
@@ -50,10 +50,33 @@ export default function DataWargaPage() {
   const handleSaveResident = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validation for required fields
     if (!newResident.fullName || !newResident.nik || !newResident.address) {
         toast({
             title: "Data Tidak Lengkap",
             description: "Mohon isi semua kolom yang wajib diisi (Nama, Alamat, NIK).",
+            variant: "destructive",
+        });
+        return;
+    }
+
+    // Validation for NIK format (16 digits)
+    const nikRegex = /^\d{16}$/;
+    if (!nikRegex.test(newResident.nik)) {
+        toast({
+            title: "Format NIK Salah",
+            description: "NIK harus terdiri dari 16 digit angka.",
+            variant: "destructive",
+        });
+        return;
+    }
+
+    // Validation for NIK uniqueness
+    const existingCitizen = await getCitizenByNIK(newResident.nik);
+    if (existingCitizen) {
+        toast({
+            title: "NIK Sudah Terdaftar",
+            description: "NIK yang Anda masukkan sudah terdaftar untuk warga lain.",
             variant: "destructive",
         });
         return;
