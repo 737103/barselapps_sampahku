@@ -70,6 +70,13 @@ export function RtAccountsTable() {
   };
   
   const handleUpdateUsername = async (accountId: string, newUsername: string) => {
+    if (!selectedAccount) return;
+    // Prevent updating if username is the same
+    if (selectedAccount.username === newUsername) {
+        setIsEditModalOpen(false);
+        return;
+    }
+
     const success = await updateRTAccountUsername(accountId, newUsername);
     if(success) {
       setAccounts(prev => 
@@ -89,6 +96,17 @@ export function RtAccountsTable() {
     }
     setIsEditModalOpen(false);
     setSelectedAccount(null);
+  }
+  
+  const handlePasswordChanged = (accountId: string, newPassword?: string) => {
+      if (newPassword) {
+        setAccounts(prev => 
+            prev.map(acc => 
+                acc.id === accountId ? { ...acc, password: newPassword } : acc
+            )
+        );
+      }
+      setSelectedAccount(null);
   }
 
   const handleResetPassword = (account: RTAccount) => {
@@ -251,6 +269,7 @@ export function RtAccountsTable() {
             isOpen={isChangePasswordModalOpen}
             onOpenChange={setIsChangePasswordModalOpen}
             account={selectedAccount}
+            onPasswordChanged={handlePasswordChanged}
           />
           <DeleteAccountAlert
             isOpen={isDeleteAlertOpen}

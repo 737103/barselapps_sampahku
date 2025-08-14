@@ -154,6 +154,17 @@ export const updateRTAccountUsername = async (id: string, newUsername: string): 
     }
 }
 
+export const updateRTAccountPassword = async (id: string, newPassword: string): Promise<boolean> => {
+    try {
+        const docRef = doc(db, "rt_accounts", id);
+        await updateDoc(docRef, { password: newPassword });
+        return true;
+    } catch (error) {
+        console.error("Error updating RT account password: ", error);
+        return false;
+    }
+}
+
 export const deleteRTAccount = async (id: string): Promise<boolean> => {
     try {
         const docRef = doc(db, "rt_accounts", id);

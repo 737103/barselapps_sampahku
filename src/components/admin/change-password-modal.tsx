@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -15,21 +16,23 @@ import React from "react";
 import type { RTAccount } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff } from "lucide-react";
+import { updateRTAccountPassword } from "@/lib/firebase/firestore";
 
 type ChangePasswordModalProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   account: RTAccount;
+  onPasswordChanged: (accountId: string, newPassword?: string) => void;
 };
 
-export function ChangePasswordModal({ isOpen, onOpenChange, account }: ChangePasswordModalProps) {
+export function ChangePasswordModal({ isOpen, onOpenChange, account, onPasswordChanged }: ChangePasswordModalProps) {
   const { toast } = useToast();
   const [newPassword, setNewPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (newPassword !== confirmPassword) {
       toast({
         title: "Password Tidak Cocok",
@@ -47,15 +50,33 @@ export function ChangePasswordModal({ isOpen, onOpenChange, account }: ChangePas
         return;
     }
     
-    console.log(`Updating password for ${account.username}`);
-    toast({
-      title: "Password Diperbarui",
-      description: `Password untuk akun ${account.username} telah berhasil diubah.`,
-    });
-    onOpenChange(false);
-    setNewPassword("");
-    setConfirmPassword("");
+    const success = await updateRTAccountPassword(account.id, newPassword);
+
+    if (success) {
+      toast({
+        title: "Password Diperbarui",
+        description: `Password untuk akun ${account.username} telah berhasil diubah.`,
+      });
+      onPasswordChanged(account.id, newPassword);
+      onOpenChange(false);
+      setNewPassword("");
+      setConfirmPassword("");
+    } else {
+       toast({
+        title: "Gagal Memperbarui Password",
+        description: "Terjadi kesalahan saat memperbarui password.",
+        variant: "destructive",
+      });
+    }
   }
+
+  React.useEffect(() => {
+    if (!isOpen) {
+        setNewPassword("");
+        setConfirmPassword("");
+        setShowPassword(false);
+    }
+  }, [isOpen])
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
