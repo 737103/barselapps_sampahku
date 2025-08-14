@@ -22,13 +22,14 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, MoreHorizontal } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "../ui/dropdown-menu";
 
 
 type StatusVariant = "default" | "secondary" | "destructive";
@@ -39,7 +40,7 @@ const badgeVariant: Record<Payment["status"], StatusVariant> = {
     "Tertunda": "secondary"
 }
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 5;
 
 export function AllPaymentsTable() {
   const [allPayments, setAllPayments] = useState<Payment[]>([]);
@@ -132,12 +133,13 @@ export function AllPaymentsTable() {
                     <TableHead>Jumlah</TableHead>
                     <TableHead>Tgl. Bayar</TableHead>
                     <TableHead>Bukti</TableHead>
+                    <TableHead className="text-right">Aksi</TableHead>
                 </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center">Memuat data pembayaran...</TableCell>
+                      <TableCell colSpan={10} className="text-center">Memuat data pembayaran...</TableCell>
                     </TableRow>
                   ) : paginatedPayments.length > 0 ? (
                     paginatedPayments.map((payment) => (
@@ -168,11 +170,30 @@ export function AllPaymentsTable() {
                             </a>
                             ) : '-'}
                         </TableCell>
+                         <TableCell className="text-right">
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                        <span className="sr-only">Buka menu</span>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+                                    <DropdownMenuItem>
+                                        Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="text-destructive">
+                                        Hapus
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                      </TableCell>
                         </TableRow>
                       ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center">Tidak ada data pembayaran untuk periode yang dipilih.</TableCell>
+                      <TableCell colSpan={10} className="text-center">Tidak ada data pembayaran untuk periode yang dipilih.</TableCell>
                     </TableRow>
                   )}
                 </TableBody>
