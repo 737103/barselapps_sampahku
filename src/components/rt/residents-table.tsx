@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { type Citizen, type Payment, type RTAccount } from "@/lib/data";
 import { PaymentModal } from "./payment-modal";
 import { useToast } from '@/hooks/use-toast';
@@ -32,6 +32,8 @@ const badgeVariant: Record<Payment["status"], StatusVariant> = {
     "Belum Lunas": "destructive",
     "Tertunda": "secondary"
 }
+
+const ITEMS_PER_PAGE = 3;
 
 type ResidentsTableProps = {
     residents: Citizen[];
@@ -55,6 +57,7 @@ export function ResidentsTable({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [payments, setPayments] = useState<Map<string, Payment>>(new Map());
+  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
 
   const currentPeriod = format(new Date(), "MMMM yyyy", { locale: id });
@@ -200,6 +203,13 @@ export function ResidentsTable({
     }
   };
 
+  const paginatedResidents = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return residents.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [residents, currentPage]);
+
+  const totalPages = Math.ceil(residents.length / ITEMS_PER_PAGE);
+
 
   return (
     <>
@@ -229,8 +239,8 @@ export function ResidentsTable({
                     <TableRow>
                       <TableCell colSpan={7} className="text-center">Memuat data...</TableCell>
                     </TableRow>
-                  ) : residents.length > 0 ? (
-                    residents.map((resident) => {
+                  ) : paginatedResidents.length > 0 ? (
+                    paginatedResidents.map((resident) => {
                       const payment = getPaymentForCitizen(resident.id);
                       const paymentStatus = payment && payment.period === currentPeriod ? payment.status : "Belum Lunas";
                       return (
@@ -282,6 +292,27 @@ export function ResidentsTable({
                 </TableBody>
             </Table>
         </CardContent>
+         <CardFooter className="flex justify-between">
+            <span className="text-sm text-muted-foreground">
+                Halaman {currentPage} dari {totalPages}
+            </span>
+            <div className="flex gap-2">
+                <Button 
+                    variant="outline"
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                >
+                    Sebelumnya
+                </Button>
+                <Button
+                    variant="outline"
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                >
+                    Berikutnya
+                </Button>
+            </div>
+        </CardFooter>
     </Card>
     {selectedCitizen && (
         <>
