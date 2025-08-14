@@ -140,6 +140,20 @@ export const getRTAccounts = async (): Promise<RTAccount[]> => {
     }
 };
 
+export const getRTAccountById = async (id: string): Promise<RTAccount | null> => {
+    try {
+        const docRef = doc(db, "rt_accounts", id);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            return { id: docSnap.id, ...docSnap.data() } as RTAccount;
+        }
+        return null;
+    } catch (error) {
+        console.error("Error getting RT account by ID: ", error);
+        return null;
+    }
+}
+
 export const addRTAccount = async (accountData: Omit<RTAccount, 'id' | 'lastLogin'>): Promise<RTAccount | null> => {
     try {
         const newAccountData = { ...accountData, lastLogin: "Belum pernah login", isDeactivated: false };

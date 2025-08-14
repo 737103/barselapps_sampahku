@@ -57,7 +57,7 @@ export function LoginForm() {
     const rtUser = await authenticateRT(rtUsername, rtPassword);
     if (rtUser) {
        // In a real app, you'd set some session/context here
-      router.push("/rt");
+      router.push(`/rt?accountId=${rtUser.id}`);
     } else {
       toast({
         title: "Login Gagal",
