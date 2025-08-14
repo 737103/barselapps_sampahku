@@ -36,6 +36,7 @@ export type Dispute = {
 export type RTAccount = {
   id: string;
   username: string;
+  password?: string; // Should be hashed in a real app
   rt: string;
   rw: string;
   lastLogin: string;

@@ -43,6 +43,21 @@ export const getCitizenById = async (id: string): Promise<Citizen | null> => {
     }
 }
 
+export const getCitizenByNIK = async (nik: string): Promise<Citizen | null> => {
+    try {
+        const q = query(citizensCollection, where("nik", "==", nik));
+        const snapshot = await getDocs(q);
+        if (snapshot.empty) {
+            return null;
+        }
+        const docSnap = snapshot.docs[0];
+        return { id: docSnap.id, ...docSnap.data() } as Citizen;
+    } catch (error) {
+        console.error("Error getting citizen by NIK: ", error);
+        return null;
+    }
+}
+
 export const addCitizen = async (citizenData: Omit<Citizen, 'id'>): Promise<Citizen | null> => {
     try {
         const docRef = await addDoc(citizensCollection, citizenData);
@@ -79,6 +94,33 @@ export const deleteCitizen = async (id: string): Promise<boolean> => {
 // --- RT Account Functions ---
 
 const rtAccountsCollection = collection(db, "rt_accounts");
+
+export const authenticateRT = async (username: string, password: string):Promise<RTAccount | null> => {
+    try {
+        const q = query(rtAccountsCollection, where("username", "==", username));
+        const snapshot = await getDocs(q);
+
+        if (snapshot.empty) {
+            console.log("No matching user found");
+            return null;
+        }
+
+        const userDoc = snapshot.docs[0];
+        const userData = userDoc.data() as RTAccount;
+
+        // In a real app, you'd compare a hashed password.
+        // For this prototype, we'll compare plaintext.
+        if (userData.password === password) {
+            return { id: userDoc.id, ...userData };
+        } else {
+            console.log("Password does not match");
+            return null;
+        }
+    } catch (error) {
+        console.error("Error authenticating RT user: ", error);
+        return null;
+    }
+};
 
 export const getRTAccounts = async (): Promise<RTAccount[]> => {
     try {

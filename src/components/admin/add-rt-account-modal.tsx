@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -27,9 +28,6 @@ export function AddRtAccountModal({ isOpen, onOpenChange, onSave }: AddRtAccount
     username: "",
     rt: "",
     rw: "",
-    fullName: "",
-    address: "",
-    whatsapp: "",
     password: ""
   });
 
@@ -42,8 +40,7 @@ export function AddRtAccountModal({ isOpen, onOpenChange, onSave }: AddRtAccount
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const { fullName, address, whatsapp, password, ...rest } = formData;
-    onSave(rest);
+    onSave(formData);
   }
 
   return (
@@ -57,24 +54,6 @@ export function AddRtAccountModal({ isOpen, onOpenChange, onSave }: AddRtAccount
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="fullName" className="text-right">
-                Nama Lengkap
-              </Label>
-              <Input id="fullName" placeholder="Contoh: Budi Santoso" className="col-span-3" value={formData.fullName} onChange={handleChange} required/>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="address" className="text-right">
-                Alamat
-              </Label>
-              <Input id="address" placeholder="Contoh: Jl. Merdeka No. 1" className="col-span-3" value={formData.address} onChange={handleChange} required/>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="whatsapp" className="text-right">
-                No. WA
-              </Label>
-              <Input id="whatsapp" placeholder="Contoh: 081234567890" className="col-span-3" value={formData.whatsapp} onChange={handleChange} required/>
-            </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="rt" className="text-right">
                 RT

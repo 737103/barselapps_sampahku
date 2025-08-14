@@ -9,15 +9,15 @@ export default function LoginPage() {
         <div className="flex flex-col items-center space-y-2 text-center">
           <Icons.logo className="h-12 w-12" />
           <h1 className="text-2xl font-semibold tracking-tight font-headline">
-            Pembayaran SampahKU
+            WastePay
           </h1>
           <p className="text-sm text-muted-foreground">
-            Please login to your account
+            Aplikasi Pembayaran Iuran Sampah
           </p>
         </div>
         <LoginForm />
         <p className="px-8 text-center text-sm text-muted-foreground">
-          Copyright 2025 Kel. Bara Baraya Selatan
+          Copyright 2024 WastePay
         </p>
       </div>
     </div>
