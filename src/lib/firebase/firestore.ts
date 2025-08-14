@@ -333,6 +333,17 @@ export const updatePayment = async (id: string, paymentData: Partial<Payment>): 
     }
 };
 
+export const deletePayment = async (id: string): Promise<boolean> => {
+    try {
+        const docRef = doc(db, "payments", id);
+        await deleteDoc(docRef);
+        return true;
+    } catch (error) {
+        console.error("Error deleting payment: ", error);
+        return false;
+    }
+};
+
 // --- Dispute Functions ---
 const disputesCollection = collection(db, "disputes");
 

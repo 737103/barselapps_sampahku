@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { type Payment } from "@/lib/data";
-import { getAllPayments, updatePayment } from "@/lib/firebase/firestore";
+import { getAllPayments, updatePayment, deletePayment } from "@/lib/firebase/firestore";
 import {
   Table,
   TableBody,
@@ -32,6 +32,7 @@ import Image from "next/image";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { EditPaymentModal } from "./edit-payment-modal";
 import { useToast } from "@/hooks/use-toast";
+import { DeletePaymentAlert } from "./delete-payment-alert";
 
 
 type StatusVariant = "default" | "secondary" | "destructive";
@@ -50,6 +51,7 @@ export function AllPaymentsTable() {
   const [selectedPeriod, setSelectedPeriod] = useState<Date | undefined>();
   const [currentPage, setCurrentPage] = useState(1);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const { toast } = useToast();
   
@@ -68,6 +70,11 @@ export function AllPaymentsTable() {
   const handleEditClick = (payment: Payment) => {
     setSelectedPayment(payment);
     setIsEditModalOpen(true);
+  };
+  
+  const handleDeleteClick = (payment: Payment) => {
+    setSelectedPayment(payment);
+    setIsDeleteAlertOpen(true);
   };
 
   const handleSavePayment = async (paymentToUpdate: Payment) => {
@@ -89,6 +96,26 @@ export function AllPaymentsTable() {
     setIsEditModalOpen(false);
     setSelectedPayment(null);
   };
+
+  const confirmDelete = async () => {
+    if (!selectedPayment) return;
+    const success = await deletePayment(selectedPayment.id);
+    if(success) {
+      toast({
+        title: "Pembayaran Dihapus",
+        description: "Data pembayaran telah berhasil dihapus.",
+      });
+      setAllPayments(prev => prev.filter(p => p.id !== selectedPayment.id));
+    } else {
+       toast({
+        title: "Gagal Menghapus",
+        description: "Terjadi kesalahan saat menghapus pembayaran.",
+        variant: "destructive",
+      });
+    }
+    setIsDeleteAlertOpen(false);
+    setSelectedPayment(null);
+  }
 
   const filteredPayments = useMemo(() => {
     if (!selectedPeriod) {
@@ -213,7 +240,10 @@ export function AllPaymentsTable() {
                                     <DropdownMenuItem onClick={() => handleEditClick(payment)}>
                                         Edit
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem className="text-destructive">
+                                    <DropdownMenuItem 
+                                        className="text-destructive focus:text-destructive"
+                                        onClick={() => handleDeleteClick(payment)}
+                                    >
                                         Hapus
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -254,12 +284,20 @@ export function AllPaymentsTable() {
         )}
       </Card>
       {selectedPayment && (
-        <EditPaymentModal 
-            isOpen={isEditModalOpen}
-            onOpenChange={setIsEditModalOpen}
-            payment={selectedPayment}
-            onSave={handleSavePayment}
-        />
+        <>
+            <EditPaymentModal 
+                isOpen={isEditModalOpen}
+                onOpenChange={setIsEditModalOpen}
+                payment={selectedPayment}
+                onSave={handleSavePayment}
+            />
+            <DeletePaymentAlert
+                isOpen={isDeleteAlertOpen}
+                onOpenChange={setIsDeleteAlertOpen}
+                onConfirm={confirmDelete}
+                payment={selectedPayment}
+            />
+        </>
       )}
     </>
   );
