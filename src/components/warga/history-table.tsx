@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   Table,
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Eye } from "lucide-react";
 import Image from "next/image";
 import { DisputeModal } from './dispute-modal';
@@ -28,11 +28,14 @@ const badgeVariant: Record<Payment["status"], StatusVariant> = {
     "Tertunda": "secondary"
 }
 
+const ITEMS_PER_PAGE = 3;
+
 export function HistoryTable() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
     const [history, setHistory] = useState<Payment[]>([]);
     const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
     const searchParams = useSearchParams();
     const citizenId = searchParams.get("citizenId");
 
@@ -41,6 +44,8 @@ export function HistoryTable() {
             if (citizenId) {
                 setLoading(true);
                 const paymentHistory = await getPaymentsForCitizen(citizenId);
+                // Sort history to show the latest first
+                paymentHistory.sort((a, b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime());
                 setHistory(paymentHistory);
                 setLoading(false);
             }
@@ -52,6 +57,14 @@ export function HistoryTable() {
         setSelectedPayment(payment);
         setIsModalOpen(true);
     }
+
+    const paginatedHistory = useMemo(() => {
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        return history.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    }, [history, currentPage]);
+
+    const totalPages = Math.ceil(history.length / ITEMS_PER_PAGE);
+
   return (
     <>
     <Card>
@@ -76,8 +89,8 @@ export function HistoryTable() {
                     <TableRow>
                         <TableCell colSpan={6} className="text-center">Memuat riwayat...</TableCell>
                     </TableRow>
-                ) : history.length > 0 ? (
-                    history.map((payment) => (
+                ) : paginatedHistory.length > 0 ? (
+                    paginatedHistory.map((payment) => (
                         <TableRow key={payment.id}>
                         <TableCell className="font-medium">{payment.period}</TableCell>
                         <TableCell>{payment.paymentDate || '-'}</TableCell>
@@ -116,6 +129,29 @@ export function HistoryTable() {
                 </TableBody>
             </Table>
         </CardContent>
+        {totalPages > 1 && (
+            <CardFooter className="flex justify-between">
+                <span className="text-sm text-muted-foreground">
+                    Halaman {currentPage} dari {totalPages}
+                </span>
+                <div className="flex gap-2">
+                    <Button 
+                        variant="outline"
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                    >
+                        Sebelumnya
+                    </Button>
+                    <Button
+                        variant="outline"
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                    >
+                        Berikutnya
+                    </Button>
+                </div>
+            </CardFooter>
+        )}
     </Card>
     {selectedPayment && (
         <DisputeModal 
