@@ -41,8 +41,10 @@ export function UserNav({ name, email, role }: UserNavProps) {
         else url = `/admin/${path}`;
       }
       else if (base === 'ketuart') {
-        if (path === 'profile') url = `/rt/settings?accountId=${accountId}`; // RT profile is on settings page
-        else url = `/rt/${path}?accountId=${accountId}`;
+        // All settings/profile related items are removed for RT for now
+        if (path === 'profile') return '#';
+        if (path === 'settings') return '#';
+        url = `/rt/${path}?accountId=${accountId}`;
       }
       else if (base === 'warga') {
         if (path === 'settings') url = `/warga/profile?citizenId=${citizenId}`; // Warga settings is on profile page
@@ -71,21 +73,23 @@ export function UserNav({ name, email, role }: UserNavProps) {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <Link href={getRoleBasedPath('profile')}>
-            <DropdownMenuItem>
-              <User className="mr-2 h-4 w-4" />
-              <span>Profile</span>
-            </DropdownMenuItem>
-          </Link>
-          <Link href={getRoleBasedPath('settings')}>
-            <DropdownMenuItem>
-              <Settings className="mr-2 h-4 w-4" />
-              <span>Settings</span>
-            </DropdownMenuItem>
-          </Link>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
+        {role !== 'Ketua RT' && (
+          <DropdownMenuGroup>
+            <Link href={getRoleBasedPath('profile')}>
+              <DropdownMenuItem>
+                <User className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </DropdownMenuItem>
+            </Link>
+            <Link href={getRoleBasedPath('settings')}>
+              <DropdownMenuItem>
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+              </DropdownMenuItem>
+            </Link>
+          </DropdownMenuGroup>
+        )}
+        {role !== 'Ketua RT' && <DropdownMenuSeparator />}
         <Link href="/">
             <DropdownMenuItem>
                 <LogOut className="mr-2 h-4 w-4" />
