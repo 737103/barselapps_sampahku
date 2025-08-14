@@ -199,6 +199,29 @@ export const deleteRTAccount = async (id: string): Promise<boolean> => {
 // --- Payment Functions ---
 const paymentsCollection = collection(db, "payments");
 
+export const getAllPayments = async (): Promise<Payment[]> => {
+    try {
+        const paymentsSnapshot = await getDocs(paymentsCollection);
+        const allPayments = paymentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Payment));
+
+        // This is not super efficient as it can lead to N+1 queries.
+        // In a real, large-scale app, denormalizing citizen data into the payment doc
+        // or fetching all citizens once and mapping them would be better.
+        // For this prototype, this approach is acceptable.
+        const paymentsWithCitizens = await Promise.all(
+            allPayments.map(async (payment) => {
+                const citizen = await getCitizenById(payment.citizenId);
+                return { ...payment, citizen: citizen || undefined };
+            })
+        );
+
+        return paymentsWithCitizens;
+    } catch (error) {
+        console.error("Error getting all payments: ", error);
+        return [];
+    }
+};
+
 export const getPaymentsForCitizen = async (citizenId: string): Promise<Payment[]> => {
     try {
         const q = query(paymentsCollection, where("citizenId", "==", citizenId));
