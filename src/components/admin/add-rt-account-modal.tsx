@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import React, { useState } from "react";
 import type { RTAccount } from "@/lib/data";
+import { useToast } from "@/hooks/use-toast";
 
 type AddRtAccountModalProps = {
   isOpen: boolean;
@@ -24,6 +25,7 @@ type AddRtAccountModalProps = {
 
 export function AddRtAccountModal({ isOpen, onOpenChange, onSave }: AddRtAccountModalProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
     username: "",
@@ -41,6 +43,26 @@ export function AddRtAccountModal({ isOpen, onOpenChange, onSave }: AddRtAccount
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const rtRwRegex = /^00\d{1}$/;
+
+    if (!rtRwRegex.test(formData.rt) || !rtRwRegex.test(formData.rw)) {
+      toast({
+        title: "Format RT/RW Salah",
+        description: "RT dan RW harus berupa angka 3 digit yang diawali dengan '00' (contoh: 001).",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (formData.password.length < 6) {
+      toast({
+        title: "Password Terlalu Pendek",
+        description: "Password minimal harus 6 karakter.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     onSave(formData);
   }
 
@@ -59,19 +81,19 @@ export function AddRtAccountModal({ isOpen, onOpenChange, onSave }: AddRtAccount
               <Label htmlFor="name" className="text-right">
                 Nama
               </Label>
-              <Input id="name" placeholder="Nama Lengkap" className="col-span-3" value={formData.name} onChange={handleChange} required/>
+              <Input id="name" placeholder="Nama Lengkap Ketua RT" className="col-span-3" value={formData.name} onChange={handleChange} required/>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="rt" className="text-right">
                 RT
               </Label>
-              <Input id="rt" placeholder="Contoh: 001" className="col-span-3" value={formData.rt} onChange={handleChange} required/>
+              <Input id="rt" placeholder="Contoh: 001" className="col-span-3" value={formData.rt} onChange={handleChange} required maxLength={3}/>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="rw" className="text-right">
                 RW
               </Label>
-              <Input id="rw" placeholder="Contoh: 001" className="col-span-3" value={formData.rw} onChange={handleChange} required/>
+              <Input id="rw" placeholder="Contoh: 001" className="col-span-3" value={formData.rw} onChange={handleChange} required maxLength={3}/>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="username" className="text-right">
@@ -84,7 +106,7 @@ export function AddRtAccountModal({ isOpen, onOpenChange, onSave }: AddRtAccount
                 Password
               </Label>
               <div className="col-span-3 relative">
-                <Input id="password" type={showPassword ? "text" : "password"} placeholder="Masukkan password" value={formData.password} onChange={handleChange} required/>
+                <Input id="password" type={showPassword ? "text" : "password"} placeholder="Minimal 6 karakter" value={formData.password} onChange={handleChange} required/>
                 <Button 
                   type="button" 
                   variant="ghost" 
