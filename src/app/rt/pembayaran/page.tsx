@@ -231,7 +231,6 @@ export default function PembayaranPage() {
                           <TableCell>{paymentForPeriod?.period || "-"}</TableCell>
                            <TableCell>
                             {paymentForPeriod?.proofUrl ? (
-                                <a href={paymentForPeriod.proofUrl} target="_blank" rel="noopener noreferrer">
                                 <Image 
                                     src={paymentForPeriod.proofUrl} 
                                     alt={`Bukti ${paymentForPeriod.period}`}
@@ -240,7 +239,6 @@ export default function PembayaranPage() {
                                     className="rounded-md object-cover"
                                     data-ai-hint="receipt"
                                 />
-                            </a>
                             ) : '-'}
                         </TableCell>
                           <TableCell className="text-right">

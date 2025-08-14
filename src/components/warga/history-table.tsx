@@ -102,7 +102,6 @@ export function HistoryTable() {
                         </TableCell>
                         <TableCell>
                             {payment.proofUrl ? (
-                                <a href={payment.proofUrl} target="_blank" rel="noopener noreferrer">
                                 <Image 
                                     src={payment.proofUrl} 
                                     alt={`Bukti ${payment.period}`}
@@ -111,7 +110,6 @@ export function HistoryTable() {
                                     className="rounded-md object-cover"
                                     data-ai-hint="receipt"
                                 />
-                            </a>
                             ) : '-'}
                         </TableCell>
                         <TableCell className="text-right">

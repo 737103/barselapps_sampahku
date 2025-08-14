@@ -127,7 +127,6 @@ export function DisputesTable() {
                         </TableCell>
                         <TableCell>
                             {dispute.proofUrl ? (
-                                <a href={dispute.proofUrl} target="_blank" rel="noopener noreferrer">
                                 <Image 
                                     src={dispute.proofUrl} 
                                     alt={`Bukti Sanggahan`}
@@ -136,7 +135,6 @@ export function DisputesTable() {
                                     className="rounded-md object-cover"
                                     data-ai-hint="receipt"
                                 />
-                                </a>
                             ) : (
                                 <p className="text-muted-foreground">-</p>
                             )}

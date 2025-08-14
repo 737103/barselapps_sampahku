@@ -52,16 +52,14 @@ export function CitizenPaymentHistoryTable({ payments = [] }: CitizenPaymentHist
                 </TableCell>
                 <TableCell>
                     {payment.proofUrl ? (
-                        <a href={payment.proofUrl} target="_blank" rel="noopener noreferrer">
-                            <Image 
-                                src={payment.proofUrl} 
-                                alt={`Bukti ${payment.period}`}
-                                width={40}
-                                height={40}
-                                className="rounded-md object-cover"
-                                data-ai-hint="receipt"
-                            />
-                        </a>
+                        <Image 
+                            src={payment.proofUrl} 
+                            alt={`Bukti ${payment.period}`}
+                            width={40}
+                            height={40}
+                            className="rounded-md object-cover"
+                            data-ai-hint="receipt"
+                        />
                     ) : "-"}
                 </TableCell>
                 </TableRow>

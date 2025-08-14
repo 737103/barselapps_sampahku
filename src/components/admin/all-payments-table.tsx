@@ -215,7 +215,6 @@ export function AllPaymentsTable() {
                           <TableCell>{payment.paymentDate}</TableCell>
                            <TableCell>
                             {payment.proofUrl ? (
-                                <a href={payment.proofUrl} target="_blank" rel="noopener noreferrer">
                                 <Image 
                                     src={payment.proofUrl} 
                                     alt={`Bukti ${payment.period}`}
@@ -224,7 +223,6 @@ export function AllPaymentsTable() {
                                     className="rounded-md object-cover"
                                     data-ai-hint="receipt"
                                 />
-                            </a>
                             ) : '-'}
                         </TableCell>
                          <TableCell className="text-right">

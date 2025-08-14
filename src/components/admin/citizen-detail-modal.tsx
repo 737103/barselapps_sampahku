@@ -66,16 +66,14 @@ export function CitizenDetailModal({ isOpen, onOpenChange, dispute, payment }: C
                 <p className="text-muted-foreground">Bukti Foto</p>
                 <div className="col-span-2">
                     {dispute.proofUrl ? (
-                        <a href={dispute.proofUrl} target="_blank" rel="noopener noreferrer">
-                            <Image 
-                                src={dispute.proofUrl} 
-                                alt={`Bukti Sanggahan`}
-                                width={150}
-                                height={150}
-                                className="rounded-md object-cover border"
-                                data-ai-hint="receipt"
-                            />
-                        </a>
+                        <Image 
+                            src={dispute.proofUrl} 
+                            alt={`Bukti Sanggahan`}
+                            width={150}
+                            height={150}
+                            className="rounded-md object-cover border"
+                            data-ai-hint="receipt"
+                        />
                     ) : (
                         <p className="text-muted-foreground italic">Tidak ada bukti</p>
                     )}
