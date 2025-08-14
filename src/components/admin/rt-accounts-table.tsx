@@ -197,6 +197,7 @@ export function RtAccountsTable() {
               <Table>
                   <TableHeader>
                   <TableRow>
+                      <TableHead>Nama</TableHead>
                       <TableHead>Username</TableHead>
                       <TableHead>RT/RW</TableHead>
                       <TableHead>Login Terakhir</TableHead>
@@ -207,13 +208,16 @@ export function RtAccountsTable() {
                   <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center">Memuat data...</TableCell>
+                      <TableCell colSpan={6} className="text-center">Memuat data...</TableCell>
                     </TableRow>
                   ) : accounts.length > 0 ? (
                     accounts.map((account) => {
                       const isDeactivated = !!account.isDeactivated;
                       return (
                         <TableRow key={account.id} className={cn(isDeactivated && "bg-muted/50")}>
+                        <TableCell className={cn("font-medium", {
+                          "text-muted-foreground": isDeactivated,
+                        })}>{account.name}</TableCell>
                         <TableCell className={cn("font-medium", {
                           "text-muted-foreground": isDeactivated,
                         })}>{account.username}</TableCell>
@@ -260,7 +264,7 @@ export function RtAccountsTable() {
                     })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center">Belum ada akun RT.</TableCell>
+                      <TableCell colSpan={6} className="text-center">Belum ada akun RT.</TableCell>
                     </TableRow>
                   )}
                   </TableBody>

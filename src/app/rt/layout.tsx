@@ -13,8 +13,8 @@ export default function RTLayout({
 }) {
   const pathname = usePathname();
   const rtUser = {
-    name: "Ahmad Subarjo",
-    email: "rt001@wastepay.app",
+    name: "Ketua RT",
+    email: "rt.account@wastepay.app",
     role: "Ketua RT" as const,
   };
 
@@ -29,7 +29,7 @@ export default function RTLayout({
 
   return (
     <div className="flex min-h-screen w-full flex-col">
-      <DashboardHeader user={rtUser} title="RT 001/001 Dashboard" />
+      <DashboardHeader user={rtUser} title="RT Dashboard" />
       <HorizontalNav items={navItems} />
       <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 bg-muted/40">
         {children}

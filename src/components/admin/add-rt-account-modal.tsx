@@ -25,6 +25,7 @@ type AddRtAccountModalProps = {
 export function AddRtAccountModal({ isOpen, onOpenChange, onSave }: AddRtAccountModalProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
+    name: "",
     username: "",
     rt: "",
     rw: "",
@@ -54,6 +55,12 @@ export function AddRtAccountModal({ isOpen, onOpenChange, onSave }: AddRtAccount
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+             <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Nama
+              </Label>
+              <Input id="name" placeholder="Nama Lengkap" className="col-span-3" value={formData.name} onChange={handleChange} required/>
+            </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="rt" className="text-right">
                 RT
