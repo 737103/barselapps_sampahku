@@ -263,7 +263,7 @@ export const getPaymentById = async(id: string): Promise<Payment | null> => {
         if (docSnap.exists()) {
             const paymentData = docSnap.data() as Payment;
             const citizen = await getCitizenById(paymentData.citizenId);
-            return { id: docSnap.id, ...paymentData, citizen };
+            return { id: docSnap.id, ...paymentData, citizen: citizen || undefined };
         }
         return null;
     } catch (error) {
@@ -384,16 +384,28 @@ export const getDisputesForCitizen = async (citizenId: string): Promise<Dispute[
     }
 };
 
-export const updateDisputeStatus = async (id: string, status: Dispute['status']): Promise<boolean> => {
+export const updateDisputeAndPaymentStatus = async (dispute: Dispute, newStatus: Dispute['status']): Promise<boolean> => {
     try {
-        const docRef = doc(db, "disputes", id);
-        await updateDoc(docRef, { status });
+        const batch = writeBatch(db);
+
+        // 1. Update dispute status
+        const disputeRef = doc(db, "disputes", dispute.id);
+        batch.update(disputeRef, { status: newStatus });
+
+        // 2. If status is 'Selesai' and it's not a general dispute, update payment status to 'Lunas'
+        if (newStatus === 'Selesai' && dispute.paymentId !== "UMUM") {
+            const paymentRef = doc(db, "payments", dispute.paymentId);
+            batch.update(paymentRef, { status: "Lunas" });
+        }
+
+        await batch.commit();
         return true;
     } catch (error) {
-        console.error("Error updating dispute status: ", error);
+        console.error("Error updating dispute and payment status: ", error);
         return false;
     }
 }
+
 
 // --- Admin Account Functions ---
 const adminsCollection = collection(db, "admins");

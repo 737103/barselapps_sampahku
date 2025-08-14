@@ -25,7 +25,7 @@ import {
 import { type Dispute, type Payment, type Citizen } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { CitizenDetailModal } from "./citizen-detail-modal";
-import { getAllDisputes, getPaymentById, updateDisputeStatus } from "@/lib/firebase/firestore";
+import { getAllDisputes, getPaymentById, updateDisputeAndPaymentStatus } from "@/lib/firebase/firestore";
 import Image from "next/image";
 
 type BadgeVariant = "destructive" | "secondary" | "default" | "outline";
@@ -55,18 +55,20 @@ export function DisputesTable() {
     fetchDisputes();
   }, [])
 
-  const handleStatusChange = async (disputeId: string, newStatus: Dispute["status"]) => {
-    const success = await updateDisputeStatus(disputeId, newStatus);
+  const handleStatusChange = async (dispute: Dispute, newStatus: Dispute["status"]) => {
+    const success = await updateDisputeAndPaymentStatus(dispute, newStatus);
     if(success) {
         setDisputes(prevDisputes => 
             prevDisputes.map(d => 
-                d.id === disputeId ? {...d, status: newStatus} : d
+                d.id === dispute.id ? {...d, status: newStatus} : d
             )
         );
         toast({
             title: "Status Sanggahan Diperbarui",
             description: `Sanggahan telah ditandai sebagai ${newStatus}.`
         });
+        // You might want to trigger a re-fetch of payments data in other components
+        // if they are visible on the same page, or rely on the real-time updates of Firestore.
     } else {
         toast({
             title: "Gagal Memperbarui Status",
@@ -77,6 +79,14 @@ export function DisputesTable() {
   }
 
   const handleViewDetails = async (dispute: Dispute) => {
+    // A general dispute might not have a payment attached.
+    if (dispute.paymentId === "UMUM") {
+       toast({
+            title: "Sanggahan Umum",
+            description: "Ini adalah sanggahan umum dan tidak terkait dengan pembayaran spesifik.",
+        });
+       return;
+    }
     const payment = await getPaymentById(dispute.paymentId);
     if (payment && payment.citizen) {
         setSelectedDispute(dispute);
@@ -127,6 +137,7 @@ export function DisputesTable() {
                         </TableCell>
                         <TableCell>
                             {dispute.proofUrl ? (
+                                <a href={dispute.proofUrl} target="_blank" rel="noopener noreferrer">
                                 <Image 
                                     src={dispute.proofUrl} 
                                     alt={`Bukti Sanggahan`}
@@ -135,6 +146,7 @@ export function DisputesTable() {
                                     className="rounded-md object-cover"
                                     data-ai-hint="receipt"
                                 />
+                                </a>
                             ) : (
                                 <p className="text-muted-foreground">-</p>
                             )}
@@ -149,16 +161,16 @@ export function DisputesTable() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Tindakan</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => handleViewDetails(dispute)}>Lihat Detail</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleViewDetails(dispute)} disabled={dispute.paymentId === "UMUM"}>Lihat Detail</DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => handleStatusChange(dispute.id, 'Diproses')}>
+                                <DropdownMenuItem onClick={() => handleStatusChange(dispute, 'Diproses')}>
                                     Tandai Diproses
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleStatusChange(dispute.id, 'Selesai')}>
+                                <DropdownMenuItem onClick={() => handleStatusChange(dispute, 'Selesai')}>
                                     Tandai Selesai
                                 </DropdownMenuItem>
                                 <DropdownMenuItem 
-                                    onClick={() => handleStatusChange(dispute.id, 'Ditolak')}
+                                    onClick={() => handleStatusChange(dispute, 'Ditolak')}
                                     className="text-destructive focus:text-destructive"
                                 >
                                     Tandai Ditolak
