@@ -55,7 +55,10 @@ export function ResidentsTable({ residents = [], setResidents = () => {}, loadin
         const paymentMap = new Map<string, Payment>();
         for (const resident of residents) {
           const citizenPayments = await getPaymentsForCitizen(resident.id);
-          const periodPayment = citizenPayments.find(p => p.period === currentPeriod);
+          // Find the most recent payment to display period and status
+          const sortedPayments = citizenPayments.sort((a, b) => new Date(b.paymentDate || 0).getTime() - new Date(a.paymentDate || 0).getTime());
+          const periodPayment = sortedPayments.find(p => p.period === currentPeriod) || sortedPayments[0];
+
           if (periodPayment) {
             paymentMap.set(resident.id, periodPayment);
           }
@@ -67,9 +70,8 @@ export function ResidentsTable({ residents = [], setResidents = () => {}, loadin
   }, [residents, currentPeriod]);
 
 
-  const getPaymentStatus = (citizenId: string): Payment['status'] => {
-      const payment = payments.get(citizenId);
-      return payment ? payment.status : "Belum Lunas";
+  const getPaymentForCitizen = (citizenId: string): Payment | undefined => {
+      return payments.get(citizenId);
   }
 
   const handleRecordPayment = (citizen: Citizen) => {
@@ -149,7 +151,10 @@ export function ResidentsTable({ residents = [], setResidents = () => {}, loadin
   }
 
   const handleSendReminder = async () => {
-    const unpaidResidents = residents.filter(r => getPaymentStatus(r.id) === 'Belum Lunas');
+    const unpaidResidents = residents.filter(r => {
+        const payment = getPaymentForCitizen(r.id);
+        return !payment || payment.period !== currentPeriod || payment.status !== 'Lunas';
+    });
 
     if (unpaidResidents.length === 0) {
        toast({
@@ -206,57 +211,63 @@ export function ResidentsTable({ residents = [], setResidents = () => {}, loadin
                     <TableHead>No. KK</TableHead>
                     <TableHead>Alamat</TableHead>
                     <TableHead>Status Pembayaran</TableHead>
+                    <TableHead>Periode</TableHead>
                     <TableHead className="text-right">Aksi</TableHead>
                 </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center">Memuat data...</TableCell>
+                      <TableCell colSpan={7} className="text-center">Memuat data...</TableCell>
                     </TableRow>
                   ) : residents.length > 0 ? (
-                    residents.map((resident) => (
-                      <TableRow key={resident.id}>
-                        <TableCell className="font-medium">{resident.name}</TableCell>
-                        <TableCell>{resident.nik}</TableCell>
-                        <TableCell>{resident.kk}</TableCell>
-                        <TableCell>{resident.address}</TableCell>
-                        <TableCell>
-                            <Badge variant={badgeVariant[getPaymentStatus(resident.id)]}>
-                                {getPaymentStatus(resident.id)}
-                            </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon">
-                                        <MoreHorizontal className="h-4 w-4" />
-                                        <span className="sr-only">Buka menu</span>
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                                    <DropdownMenuItem onClick={() => handleRecordPayment(resident)}>
-                                        Catat Pembayaran
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleEdit(resident)}>
-                                        Edit Data
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem 
-                                        className="text-destructive focus:text-destructive"
-                                        onClick={() => handleDelete(resident)}
-                                    >
-                                        Hapus Data
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))
+                    residents.map((resident) => {
+                      const payment = getPaymentForCitizen(resident.id);
+                      const paymentStatus = payment && payment.period === currentPeriod ? payment.status : "Belum Lunas";
+                      return (
+                        <TableRow key={resident.id}>
+                          <TableCell className="font-medium">{resident.name}</TableCell>
+                          <TableCell>{resident.nik}</TableCell>
+                          <TableCell>{resident.kk}</TableCell>
+                          <TableCell>{resident.address}</TableCell>
+                          <TableCell>
+                              <Badge variant={badgeVariant[paymentStatus]}>
+                                  {paymentStatus}
+                              </Badge>
+                          </TableCell>
+                          <TableCell>{payment?.period || "-"}</TableCell>
+                          <TableCell className="text-right">
+                              <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="icon">
+                                          <MoreHorizontal className="h-4 w-4" />
+                                          <span className="sr-only">Buka menu</span>
+                                      </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                      <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+                                      <DropdownMenuItem onClick={() => handleRecordPayment(resident)}>
+                                          Catat Pembayaran
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => handleEdit(resident)}>
+                                          Edit Data
+                                      </DropdownMenuItem>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem 
+                                          className="text-destructive focus:text-destructive"
+                                          onClick={() => handleDelete(resident)}
+                                      >
+                                          Hapus Data
+                                      </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                              </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center">Belum ada warga terdaftar.</TableCell>
+                      <TableCell colSpan={7} className="text-center">Belum ada warga terdaftar.</TableCell>
                     </TableRow>
                   )}
                 </TableBody>
