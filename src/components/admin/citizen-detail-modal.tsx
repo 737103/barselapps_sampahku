@@ -10,44 +10,72 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import type { Citizen } from "@/lib/data";
+import type { Citizen, Dispute, Payment } from "@/lib/data";
+import { Separator } from "../ui/separator";
+import Image from "next/image";
 
 type CitizenDetailModalProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  citizen: Citizen;
+  dispute: Dispute;
+  payment: Payment & { citizen: Citizen };
 };
 
-export function CitizenDetailModal({ isOpen, onOpenChange, citizen }: CitizenDetailModalProps) {
+export function CitizenDetailModal({ isOpen, onOpenChange, dispute, payment }: CitizenDetailModalProps) {
+    const { citizen } = payment;
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Detail Informasi Warga</DialogTitle>
+            <DialogTitle>Detail Sanggahan Warga</DialogTitle>
             <DialogDescription>
-              Informasi lengkap mengenai warga yang terdaftar.
+              Informasi lengkap mengenai sanggahan yang diajukan.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4 text-sm">
-            <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2">
+            <h4 className="font-semibold">Informasi Warga</h4>
+            <div className="grid grid-cols-3 items-start gap-x-4 gap-y-2">
                 <p className="text-muted-foreground">Nama Lengkap</p>
                 <p className="col-span-2 font-semibold">{citizen.name}</p>
             </div>
-             <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2">
+             <div className="grid grid-cols-3 items-start gap-x-4 gap-y-2">
                 <p className="text-muted-foreground">NIK</p>
                 <p className="col-span-2">{citizen.nik}</p>
             </div>
-             <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2">
-                <p className="text-muted-foreground">No. KK</p>
-                <p className="col-span-2">{citizen.kk}</p>
-            </div>
-             <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2">
+             <div className="grid grid-cols-3 items-start gap-x-4 gap-y-2">
                 <p className="text-muted-foreground">Alamat</p>
                 <p className="col-span-2">{citizen.address}</p>
             </div>
-             <div className="grid grid-cols-3 items-center gap-x-4 gap-y-2">
+             <div className="grid grid-cols-3 items-start gap-x-4 gap-y-2">
                 <p className="text-muted-foreground">RT/RW</p>
                 <p className="col-span-2">{`${citizen.rt}/${citizen.rw}`}</p>
+            </div>
+            
+            <Separator className="my-2"/>
+
+            <h4 className="font-semibold">Detail Sanggahan</h4>
+             <div className="grid grid-cols-3 items-start gap-x-4 gap-y-2">
+                <p className="text-muted-foreground">Periode</p>
+                <p className="col-span-2">{payment.period}</p>
+            </div>
+            <div className="grid grid-cols-3 items-start gap-x-4 gap-y-2">
+                <p className="text-muted-foreground">Alasan</p>
+                <p className="col-span-2">{dispute.reason}</p>
+            </div>
+            <div className="grid grid-cols-3 items-start gap-x-4 gap-y-2">
+                <p className="text-muted-foreground">Bukti Bayar</p>
+                <div className="col-span-2">
+                   <a href={payment.proofUrl} target="_blank" rel="noopener noreferrer">
+                        <Image 
+                            src={payment.proofUrl} 
+                            alt={`Bukti ${payment.period}`}
+                            width={150}
+                            height={150}
+                            className="rounded-md object-cover border"
+                            data-ai-hint="receipt"
+                        />
+                    </a>
+                </div>
             </div>
           </div>
           <DialogFooter>

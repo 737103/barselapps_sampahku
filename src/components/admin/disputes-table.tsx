@@ -22,7 +22,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { disputes as initialDisputes, type Dispute, payments, type Citizen } from "@/lib/data";
+import { disputes as initialDisputes, type Dispute, payments, type Citizen, type Payment } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { CitizenDetailModal } from "./citizen-detail-modal";
 
@@ -38,7 +38,8 @@ const badgeVariant: Record<Dispute["status"], BadgeVariant> = {
 export function DisputesTable() {
   const [disputes, setDisputes] = useState<Dispute[]>(initialDisputes);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [selectedCitizen, setSelectedCitizen] = useState<Citizen | null>(null);
+  const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null);
+  const [selectedPayment, setSelectedPayment] = useState<(Payment & { citizen: Citizen }) | null>(null);
   const { toast } = useToast();
 
   const handleStatusChange = (disputeId: string, newStatus: Dispute["status"]) => {
@@ -56,12 +57,13 @@ export function DisputesTable() {
   const handleViewDetails = (dispute: Dispute) => {
     const payment = payments.find(p => p.id === dispute.paymentId);
     if (payment && payment.citizen) {
-        setSelectedCitizen(payment.citizen);
+        setSelectedDispute(dispute);
+        setSelectedPayment(payment as Payment & { citizen: Citizen });
         setIsDetailModalOpen(true);
     } else {
         toast({
-            title: "Data Warga Tidak Ditemukan",
-            description: "Tidak dapat menemukan detail untuk warga ini.",
+            title: "Data Pembayaran/Warga Tidak Ditemukan",
+            description: "Tidak dapat menemukan detail untuk sanggahan ini.",
             variant: "destructive",
         });
     }
@@ -130,11 +132,12 @@ export function DisputesTable() {
             </Table>
         </CardContent>
     </Card>
-    {selectedCitizen && (
+    {selectedDispute && selectedPayment && (
         <CitizenDetailModal
             isOpen={isDetailModalOpen}
             onOpenChange={setIsDetailModalOpen}
-            citizen={selectedCitizen}
+            dispute={selectedDispute}
+            payment={selectedPayment}
         />
     )}
     </>
