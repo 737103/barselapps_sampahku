@@ -18,6 +18,8 @@ export type Payment = {
   proofUrl: string;
   status: "Lunas" | "Belum Lunas" | "Tertunda";
   citizen?: Citizen;
+  rt: string;
+  rw: string;
 };
 
 export type Dispute = {

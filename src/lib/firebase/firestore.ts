@@ -222,6 +222,21 @@ export const getAllPayments = async (): Promise<Payment[]> => {
     }
 };
 
+export const getPaymentsByRT = async (rt: string, rw: string): Promise<Payment[]> => {
+    try {
+        const q = query(paymentsCollection, where("rt", "==", rt), where("rw", "==", rw));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+        } as Payment));
+
+    } catch (error) {
+        console.error(`Error getting payments for RT ${rt}/${rw}: `, error);
+        return [];
+    }
+};
+
 export const getPaymentsForCitizen = async (citizenId: string): Promise<Payment[]> => {
     try {
         const q = query(paymentsCollection, where("citizenId", "==", citizenId));
@@ -265,6 +280,8 @@ export const recordPayment = async (citizenId: string, paymentData: Omit<Payment
         const newPaymentData = {
             ...paymentData,
             citizenId: citizenId,
+            rt: citizen.rt,
+            rw: citizen.rw,
             proofUrl: "https://placehold.co/400x400.png", // placeholder
         };
 

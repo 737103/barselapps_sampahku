@@ -4,7 +4,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { type Citizen, type Payment, type RTAccount } from "@/lib/data";
-import { getCitizensByRT, getRTAccountById, getPaymentsForCitizen, recordPayment, createNotification } from "@/lib/firebase/firestore";
+import { getCitizensByRT, getRTAccountById, recordPayment, createNotification, getPaymentsByRT } from "@/lib/firebase/firestore";
 import {
   Table,
   TableBody,
@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, MoreHorizontal } from "lucide-react";
+import { Calendar as CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -31,13 +31,12 @@ import { id } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { PaymentModal } from "@/components/rt/payment-modal";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import Image from "next/image";
 
 
 type StatusVariant = "default" | "secondary" | "destructive";
 
-const badgeVariant: Record<Payment["status"], StatusVariant> = {
+const badgeVariant: Record<string, StatusVariant> = {
     "Lunas": "default",
     "Belum Lunas": "destructive",
     "Tertunda": "secondary"
@@ -49,7 +48,7 @@ export default function PembayaranPage() {
   const [residents, setResidents] = useState<Citizen[]>([]);
   const [loading, setLoading] = useState(true);
   const [rtAccount, setRtAccount] = useState<RTAccount | null>(null);
-  const [payments, setPayments] = useState<Map<string, Payment>>(new Map());
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<Date>(new Date());
   const [currentPage, setCurrentPage] = useState(1);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -58,9 +57,11 @@ export default function PembayaranPage() {
   const searchParams = useSearchParams();
   const accountId = searchParams.get('accountId');
   const { toast } = useToast();
+  
+  const formattedPeriod = format(selectedPeriod, "MMMM yyyy", { locale: id });
 
   useEffect(() => {
-    const fetchAccountAndCitizens = async () => {
+    const fetchAccountAndData = async () => {
       if (accountId) {
         setLoading(true);
         const account = await getRTAccountById(accountId);
@@ -68,34 +69,14 @@ export default function PembayaranPage() {
         if (account) {
           const fetchedCitizens = await getCitizensByRT(account.rt, account.rw);
           setResidents(fetchedCitizens);
+          const fetchedPayments = await getPaymentsByRT(account.rt, account.rw);
+          setPayments(fetchedPayments);
         }
         setLoading(false);
       }
     };
-    fetchAccountAndCitizens();
+    fetchAccountAndData();
   }, [accountId]);
-  
-  const formattedPeriod = format(selectedPeriod, "MMMM yyyy", { locale: id });
-
-  useEffect(() => {
-    const fetchPayments = async () => {
-      if (residents.length > 0) {
-        setLoading(true);
-        const paymentMap = new Map<string, Payment>();
-        for (const resident of residents) {
-          const citizenPayments = await getPaymentsForCitizen(resident.id);
-          const periodPayment = citizenPayments.find(p => p.period === formattedPeriod);
-          
-          if (periodPayment) {
-            paymentMap.set(resident.id, periodPayment);
-          }
-        }
-        setPayments(paymentMap);
-        setLoading(false);
-      }
-    };
-    fetchPayments();
-  }, [residents, formattedPeriod]);
 
   const handleRecordPayment = (citizen: Citizen) => {
     setSelectedCitizen(citizen);
@@ -108,7 +89,11 @@ export default function PembayaranPage() {
     const newPayment = await recordPayment(selectedCitizen.id, paymentData);
 
     if(newPayment) {
-      setPayments(prev => new Map(prev).set(selectedCitizen.id, newPayment));
+      // Re-fetch payments to ensure data is up-to-date
+      if(rtAccount) {
+         const fetchedPayments = await getPaymentsByRT(rtAccount.rt, rtAccount.rw);
+         setPayments(fetchedPayments);
+      }
       toast({
           title: "Pembayaran Berhasil Disimpan",
           description: `Pembayaran untuk ${paymentData.citizenName} periode ${paymentData.period} telah dicatat.`,
@@ -125,7 +110,10 @@ export default function PembayaranPage() {
   }
 
   const handleSendReminder = async () => {
-    const unpaidResidents = residents.filter(r => !payments.has(r.id));
+    const unpaidResidents = residents.filter(r => {
+        const paymentForPeriod = payments.find(p => p.citizenId === r.id && p.period === formattedPeriod);
+        return !paymentForPeriod;
+    });
 
     if (unpaidResidents.length === 0) {
        toast({
@@ -229,8 +217,8 @@ export default function PembayaranPage() {
                     </TableRow>
                   ) : paginatedResidents.length > 0 ? (
                     paginatedResidents.map((resident) => {
-                      const payment = payments.get(resident.id);
-                      const paymentStatus = payment ? payment.status : "Belum Lunas";
+                      const paymentForPeriod = payments.find(p => p.citizenId === resident.id && p.period === formattedPeriod);
+                      const paymentStatus = paymentForPeriod ? paymentForPeriod.status : "Belum Lunas";
                       return (
                         <TableRow key={resident.id}>
                           <TableCell className="font-medium">{resident.name}</TableCell>
@@ -240,13 +228,13 @@ export default function PembayaranPage() {
                                   {paymentStatus}
                               </Badge>
                           </TableCell>
-                          <TableCell>{payment?.period || "-"}</TableCell>
+                          <TableCell>{paymentForPeriod?.period || "-"}</TableCell>
                            <TableCell>
-                            {payment?.proofUrl ? (
-                                <a href={payment.proofUrl} target="_blank" rel="noopener noreferrer">
+                            {paymentForPeriod?.proofUrl ? (
+                                <a href={paymentForPeriod.proofUrl} target="_blank" rel="noopener noreferrer">
                                 <Image 
-                                    src={payment.proofUrl} 
-                                    alt={`Bukti ${payment.period}`}
+                                    src={paymentForPeriod.proofUrl} 
+                                    alt={`Bukti ${paymentForPeriod.period}`}
                                     width={40}
                                     height={40}
                                     className="rounded-md object-cover"
