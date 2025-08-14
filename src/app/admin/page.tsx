@@ -1,8 +1,26 @@
+
+"use client";
+
+import { useState, useEffect } from "react";
 import { StatCard } from "@/components/stat-card";
 import { DisputesTable } from "@/components/admin/disputes-table";
 import { DollarSign, Users, MessageSquareWarning, TrendingUp } from "lucide-react";
+import { getAllCitizens } from "@/lib/firebase/firestore";
 
 export default function AdminDashboardPage() {
+  const [totalCitizens, setTotalCitizens] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTotalCitizens = async () => {
+      setLoading(true);
+      const citizens = await getAllCitizens();
+      setTotalCitizens(citizens.length);
+      setLoading(false);
+    };
+    fetchTotalCitizens();
+  }, []);
+
   return (
     <>
       <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
@@ -14,9 +32,9 @@ export default function AdminDashboardPage() {
         />
         <StatCard 
             title="Total Warga Terdaftar" 
-            value="3,150" 
+            value={loading ? "Memuat..." : (totalCitizens ?? 0).toLocaleString('id-ID')}
             icon={Users}
-            description="+180 since last month" 
+            description={!loading && totalCitizens !== null ? "warga terdaftar di sistem" : " "}
         />
         <StatCard 
             title="Sanggahan Aktif" 
