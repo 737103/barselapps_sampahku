@@ -148,6 +148,25 @@ export function ResidentsTable({ residents = [], setResidents = () => {}, loadin
       setSelectedCitizen(null);
   }
 
+  const handleSendReminder = () => {
+    // In a real app, this would trigger a backend process to send notifications.
+    // For this prototype, we'll just show a success toast.
+    const unpaidResidents = residents.filter(r => getPaymentStatus(r.id) === 'Belum Lunas').length;
+
+    if (unpaidResidents === 0) {
+       toast({
+        title: "Tidak Ada Tunggakan",
+        description: "Semua warga telah membayar iuran bulan ini.",
+      });
+      return;
+    }
+    
+    toast({
+      title: "Pengingat Terkirim",
+      description: `Pengingat pembayaran telah dikirimkan kepada ${unpaidResidents} warga yang belum bayar.`,
+    });
+  };
+
 
   return (
     <>
@@ -157,7 +176,7 @@ export function ResidentsTable({ residents = [], setResidents = () => {}, loadin
                 <CardTitle>Data Warga RT {rtAccount?.rt || '...'} / RW {rtAccount?.rw || '...'}</CardTitle>
                 <CardDescription>Status pembayaran iuran sampah bulan ini.</CardDescription>
             </div>
-             <Button>Kirim Pengingat</Button>
+             <Button onClick={handleSendReminder}>Kirim Pengingat</Button>
         </CardHeader>
         <CardContent>
             <Table>
