@@ -4,11 +4,12 @@
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { CitizenPaymentHistoryTable } from '@/components/admin/citizen-payment-history-table';
-import { payments, citizens, type Citizen, type Payment } from '@/lib/data';
+import { type Citizen, type Payment } from '@/lib/data';
 import { useEffect, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { getCitizenById, getPaymentsForCitizen } from '@/lib/firebase/firestore';
 
 export default function CitizenPaymentHistoryPage() {
   const params = useParams();
@@ -16,17 +17,31 @@ export default function CitizenPaymentHistoryPage() {
 
   const [citizen, setCitizen] = useState<Citizen | null>(null);
   const [paymentHistory, setPaymentHistory] = useState<Payment[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (citizenId) {
-      const foundCitizen = citizens.find(c => c.id === citizenId);
-      if (foundCitizen) {
-        setCitizen(foundCitizen);
-        const history = payments.filter(p => p.citizenId === citizenId);
-        setPaymentHistory(history);
+      const fetchData = async () => {
+        setLoading(true);
+        const foundCitizen = await getCitizenById(citizenId);
+        if (foundCitizen) {
+          setCitizen(foundCitizen);
+          const history = await getPaymentsForCitizen(citizenId);
+          setPaymentHistory(history);
+        }
+        setLoading(false);
       }
+      fetchData();
     }
   }, [citizenId]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+          <p>Memuat data...</p>
+      </div>
+    )
+  }
 
   if (!citizen) {
     return (

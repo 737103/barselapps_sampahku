@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from 'next/link';
 import {
   Table,
@@ -23,14 +23,23 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Citizen } from "@/lib/data";
 import { ViewCitizenDetailsModal } from "./view-citizen-details-modal";
+import { getAllCitizens } from "@/lib/firebase/firestore";
 
-type AllResidentsTableProps = {
-    residents: Citizen[];
-}
-
-export function AllResidentsTable({ residents = [] }: AllResidentsTableProps) {
+export function AllResidentsTable() {
+  const [residents, setResidents] = useState<Citizen[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCitizen, setSelectedCitizen] = useState<Citizen | null>(null);
+
+  useEffect(() => {
+    const fetchCitizens = async () => {
+      setLoading(true);
+      const fetchedCitizens = await getAllCitizens();
+      setResidents(fetchedCitizens);
+      setLoading(false);
+    };
+    fetchCitizens();
+  }, []);
 
   const handleViewDetails = (resident: Citizen) => {
     setSelectedCitizen(resident);
@@ -57,36 +66,46 @@ export function AllResidentsTable({ residents = [] }: AllResidentsTableProps) {
                 </TableRow>
                 </TableHeader>
                 <TableBody>
-                {residents.map((resident) => (
-                    <TableRow key={resident.id}>
-                    <TableCell className="font-medium">{resident.name}</TableCell>
-                    <TableCell>{resident.nik}</TableCell>
-                    <TableCell>{resident.kk}</TableCell>
-                    <TableCell>{resident.address}</TableCell>
-                    <TableCell>{`RT ${resident.rt} / RW ${resident.rw}`}</TableCell>
-                    <TableCell className="text-right">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                    <span className="sr-only">Buka menu</span>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => handleViewDetails(resident)}>
-                                    Lihat Detail Warga
-                                </DropdownMenuItem>
-                                <Link href={`/admin/manajemen-warga/${resident.id}`}>
-                                    <DropdownMenuItem>
-                                        Lihat Riwayat Pembayaran
-                                    </DropdownMenuItem>
-                                </Link>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </TableCell>
-                    </TableRow>
-                ))}
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center">Memuat data warga...</TableCell>
+                  </TableRow>
+                ) : residents.length > 0 ? (
+                  residents.map((resident) => (
+                      <TableRow key={resident.id}>
+                      <TableCell className="font-medium">{resident.name}</TableCell>
+                      <TableCell>{resident.nik}</TableCell>
+                      <TableCell>{resident.kk}</TableCell>
+                      <TableCell>{resident.address}</TableCell>
+                      <TableCell>{`RT ${resident.rt} / RW ${resident.rw}`}</TableCell>
+                      <TableCell className="text-right">
+                          <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                      <span className="sr-only">Buka menu</span>
+                                  </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                  <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+                                  <DropdownMenuItem onClick={() => handleViewDetails(resident)}>
+                                      Lihat Detail Warga
+                                  </DropdownMenuItem>
+                                  <Link href={`/admin/manajemen-warga/${resident.id}`}>
+                                      <DropdownMenuItem>
+                                          Lihat Riwayat Pembayaran
+                                      </DropdownMenuItem>
+                                  </Link>
+                              </DropdownMenuContent>
+                          </DropdownMenu>
+                      </TableCell>
+                      </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center">Belum ada data warga.</TableCell>
+                  </TableRow>
+                )}
                 </TableBody>
             </Table>
         </CardContent>

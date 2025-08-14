@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ResidentsTable } from "@/components/rt/residents-table";
 import {
   Card,
@@ -14,26 +14,40 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { rtResidents, type Citizen } from "@/lib/data";
+import { type Citizen } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
+import { addCitizen, getCitizensByRT } from "@/lib/firebase/firestore";
 
 export default function DataWargaPage() {
-  const [residents, setResidents] = useState<Citizen[]>(rtResidents);
+  const [residents, setResidents] = useState<Citizen[]>([]);
+  const [loading, setLoading] = useState(true);
   const [newResident, setNewResident] = useState({
     fullName: "",
     address: "",
     nik: "",
     kk: "",
-    receiptNumber: "",
   });
   const { toast } = useToast();
+  const currentRT = "001"; // Assuming static RT for now
+  const currentRW = "001"; // Assuming static RW for now
+
+  useEffect(() => {
+    const fetchCitizens = async () => {
+      setLoading(true);
+      const fetchedCitizens = await getCitizensByRT(currentRT, currentRW);
+      setResidents(fetchedCitizens);
+      setLoading(false);
+    };
+    fetchCitizens();
+  }, [currentRT, currentRW]);
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setNewResident((prev) => ({ ...prev, [id]: value }));
   };
 
-  const handleSaveResident = (e: React.FormEvent) => {
+  const handleSaveResident = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!newResident.fullName || !newResident.nik || !newResident.address) {
@@ -45,31 +59,37 @@ export default function DataWargaPage() {
         return;
     }
 
-    const newCitizen: Citizen = {
-      id: `c${residents.length + 10}`, // temp unique id
+    const citizenData = {
       name: newResident.fullName,
       address: newResident.address,
       nik: newResident.nik,
       kk: newResident.kk,
-      rt: "001",
-      rw: "001",
+      rt: currentRT,
+      rw: currentRW,
     };
+    
+    const newCitizen = await addCitizen(citizenData);
 
-    setResidents((prev) => [newCitizen, ...prev]);
-
-    toast({
-      title: "Data Warga Disimpan",
-      description: `Warga baru "${newResident.fullName}" telah berhasil ditambahkan.`,
-    });
-
-    // Reset form
-    setNewResident({
-        fullName: "",
-        address: "",
-        nik: "",
-        kk: "",
-        receiptNumber: "",
-    });
+    if(newCitizen) {
+      setResidents((prev) => [newCitizen, ...prev]);
+      toast({
+        title: "Data Warga Disimpan",
+        description: `Warga baru "${newResident.fullName}" telah berhasil ditambahkan.`,
+      });
+      // Reset form
+      setNewResident({
+          fullName: "",
+          address: "",
+          nik: "",
+          kk: "",
+      });
+    } else {
+        toast({
+            title: "Gagal Menyimpan Data",
+            description: "Terjadi kesalahan saat menambahkan warga baru.",
+            variant: "destructive",
+        })
+    }
   };
 
   return (
@@ -130,8 +150,7 @@ export default function DataWargaPage() {
                 <Label htmlFor="rt">RT</Label>
                 <Input
                   id="rt"
-                  placeholder="Contoh: 001"
-                  defaultValue="001"
+                  value={currentRT}
                   disabled
                 />
               </div>
@@ -139,18 +158,8 @@ export default function DataWargaPage() {
                 <Label htmlFor="rw">RW</Label>
                 <Input
                   id="rw"
-                  placeholder="Contoh: 001"
-                  defaultValue="001"
+                  value={currentRW}
                   disabled
-                />
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="receiptNumber">No. Kuitansi Sampah</Label>
-                <Input
-                  id="receiptNumber"
-                  placeholder="Masukkan nomor kuitansi"
-                  value={newResident.receiptNumber}
-                  onChange={handleInputChange}
                 />
               </div>
             </div>
@@ -161,7 +170,7 @@ export default function DataWargaPage() {
         </form>
       </Card>
 
-      <ResidentsTable residents={residents} setResidents={setResidents} />
+      <ResidentsTable residents={residents} setResidents={setResidents} loading={loading} />
     </div>
   );
 }

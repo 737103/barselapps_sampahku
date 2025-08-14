@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -20,16 +21,18 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { rtAccounts, type RTAccount } from "@/lib/data";
+import { type RTAccount } from "@/lib/data";
 import { AddRtAccountModal } from "./add-rt-account-modal";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { EditUsernameModal } from "./edit-username-modal";
 import { ChangePasswordModal } from "./change-password-modal";
 import { DeleteAccountAlert } from "./delete-account-alert";
+import { addRTAccount, deleteRTAccount, getRTAccounts, updateRTAccountUsername } from "@/lib/firebase/firestore";
 
 export function RtAccountsTable() {
-  const [accounts, setAccounts] = useState<RTAccount[]>(rtAccounts);
+  const [accounts, setAccounts] = useState<RTAccount[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
@@ -38,30 +41,52 @@ export function RtAccountsTable() {
   const [deactivatedAccounts, setDeactivatedAccounts] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
-  const handleAddAccount = (newAccountData: Omit<RTAccount, 'id' | 'lastLogin'>) => {
-    const newAccount: RTAccount = {
-      ...newAccountData,
-      id: `rt${accounts.length + 1}`,
-      lastLogin: "Baru saja",
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      setLoading(true);
+      const fetchedAccounts = await getRTAccounts();
+      setAccounts(fetchedAccounts);
+      setLoading(false);
     };
-    setAccounts(prev => [newAccount, ...prev]);
-    toast({
-      title: "Akun Berhasil Ditambahkan",
-      description: `Akun baru untuk ${newAccount.username} telah dibuat.`,
-    });
-    setIsAddModalOpen(false);
+    fetchAccounts();
+  }, []);
+
+  const handleAddAccount = async (newAccountData: Omit<RTAccount, 'id' | 'lastLogin'>) => {
+    const newAccount = await addRTAccount(newAccountData);
+    if(newAccount) {
+      setAccounts(prev => [newAccount, ...prev]);
+      toast({
+        title: "Akun Berhasil Ditambahkan",
+        description: `Akun baru untuk ${newAccount.username} telah dibuat.`,
+      });
+      setIsAddModalOpen(false);
+    } else {
+        toast({
+            title: "Gagal Menambahkan Akun",
+            description: "Terjadi kesalahan saat menambahkan akun baru.",
+            variant: "destructive",
+        })
+    }
   };
   
-  const handleUpdateUsername = (accountId: string, newUsername: string) => {
-    setAccounts(prev => 
-      prev.map(acc => 
-        acc.id === accountId ? { ...acc, username: newUsername } : acc
-      )
-    );
-    toast({
-      title: "Username Diperbarui",
-      description: `Username telah berhasil diubah menjadi ${newUsername}.`,
-    });
+  const handleUpdateUsername = async (accountId: string, newUsername: string) => {
+    const success = await updateRTAccountUsername(accountId, newUsername);
+    if(success) {
+      setAccounts(prev => 
+        prev.map(acc => 
+          acc.id === accountId ? { ...acc, username: newUsername } : acc
+        )
+      );
+      toast({
+        title: "Username Diperbarui",
+        description: `Username telah berhasil diubah menjadi ${newUsername}.`,
+      });
+    } else {
+        toast({
+            title: "Gagal Memperbarui Username",
+            variant: "destructive"
+        })
+    }
     setIsEditModalOpen(false);
     setSelectedAccount(null);
   }
@@ -88,13 +113,22 @@ export function RtAccountsTable() {
     setIsDeleteAlertOpen(true);
   };
 
-  const confirmDeleteAccount = () => {
+  const confirmDeleteAccount = async () => {
     if (!selectedAccount) return;
-    setAccounts(accounts.filter(acc => acc.id !== selectedAccount.id));
-    toast({
-        title: "Akun Dihapus",
-        description: `Akun ${selectedAccount.username} telah berhasil dihapus.`,
-    });
+    const success = await deleteRTAccount(selectedAccount.id);
+
+    if(success) {
+        setAccounts(accounts.filter(acc => acc.id !== selectedAccount.id));
+        toast({
+            title: "Akun Dihapus",
+            description: `Akun ${selectedAccount.username} telah berhasil dihapus.`,
+        });
+    } else {
+        toast({
+            title: "Gagal Menghapus Akun",
+            variant: "destructive",
+        })
+    }
     setIsDeleteAlertOpen(false);
     setSelectedAccount(null);
   };
@@ -145,51 +179,61 @@ export function RtAccountsTable() {
                   </TableRow>
                   </TableHeader>
                   <TableBody>
-                  {accounts.map((account) => {
-                    const isDeactivated = deactivatedAccounts.has(account.id);
-                    return (
-                      <TableRow key={account.id}>
-                      <TableCell className={cn("font-medium", {
-                        "text-destructive": isDeactivated,
-                      })}>{account.username}</TableCell>
-                      <TableCell>{`RT ${account.rt} / RW ${account.rw}`}</TableCell>
-                      <TableCell>{account.lastLogin}</TableCell>
-                      <TableCell className="text-right">
-                          <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                              <Button aria-haspopup="true" size="icon" variant="ghost">
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Toggle menu</span>
-                              </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Tindakan Cepat</DropdownMenuLabel>
-                               <DropdownMenuItem onClick={() => handleEditUsername(account)}>
-                                Ubah Username
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleChangePassword(account)}>
-                                Ubah Password
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleResetPassword(account)}>
-                                Reset Password
-                              </DropdownMenuItem>
-                               <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => toggleAccountStatus(account)}>
-                                  {isDeactivated ? "Aktifkan Akun" : "Nonaktifkan Akun"}
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center">Memuat data...</TableCell>
+                    </TableRow>
+                  ) : accounts.length > 0 ? (
+                    accounts.map((account) => {
+                      const isDeactivated = deactivatedAccounts.has(account.id);
+                      return (
+                        <TableRow key={account.id}>
+                        <TableCell className={cn("font-medium", {
+                          "text-destructive": isDeactivated,
+                        })}>{account.username}</TableCell>
+                        <TableCell>{`RT ${account.rt} / RW ${account.rw}`}</TableCell>
+                        <TableCell>{account.lastLogin}</TableCell>
+                        <TableCell className="text-right">
+                            <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button aria-haspopup="true" size="icon" variant="ghost">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Toggle menu</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Tindakan Cepat</DropdownMenuLabel>
+                                 <DropdownMenuItem onClick={() => handleEditUsername(account)}>
+                                  Ubah Username
                                 </DropdownMenuItem>
-                               <DropdownMenuSeparator />
-                              <DropdownMenuItem 
-                                onClick={() => handleDeleteAccount(account)} 
-                                className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                              >
-                                Hapus Akun
-                              </DropdownMenuItem>
-                          </DropdownMenuContent>
-                          </DropdownMenu>
-                      </TableCell>
-                      </TableRow>
-                    )
-                  })}
+                                <DropdownMenuItem onClick={() => handleChangePassword(account)}>
+                                  Ubah Password
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleResetPassword(account)}>
+                                  Reset Password
+                                </DropdownMenuItem>
+                                 <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => toggleAccountStatus(account)}>
+                                    {isDeactivated ? "Aktifkan Akun" : "Nonaktifkan Akun"}
+                                  </DropdownMenuItem>
+                                 <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                  onClick={() => handleDeleteAccount(account)} 
+                                  className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                                >
+                                  Hapus Akun
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                            </DropdownMenu>
+                        </TableCell>
+                        </TableRow>
+                      )
+                    })
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center">Belum ada akun RT.</TableCell>
+                    </TableRow>
+                  )}
                   </TableBody>
               </Table>
           </CardContent>
