@@ -307,6 +307,17 @@ export const getAllDisputes = async (): Promise<Dispute[]> => {
     }
 }
 
+export const getDisputesForCitizen = async (citizenId: string): Promise<Dispute[]> => {
+    try {
+        const q = query(disputesCollection, where("citizenId", "==", citizenId));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Dispute));
+    } catch (error) {
+        console.error(`Error getting disputes for citizen ${citizenId}: `, error);
+        return [];
+    }
+};
+
 export const updateDisputeStatus = async (id: string, status: Dispute['status']): Promise<boolean> => {
     try {
         const docRef = doc(db, "disputes", id);

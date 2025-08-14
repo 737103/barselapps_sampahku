@@ -11,6 +11,7 @@ import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from "next/navigation";
 import { addDispute, getCitizenById } from "@/lib/firebase/firestore";
+import { DisputesHistoryTable } from "@/components/warga/disputes-history-table";
 
 export default function AjukanSanggahanPage() {
   const [fileName, setFileName] = useState<string | null>(null);
@@ -78,6 +79,7 @@ export default function AjukanSanggahanPage() {
         });
         setReason("");
         setFileName(null);
+        // Maybe trigger a refresh of the history table here
     } else {
         toast({
             title: "Gagal Mengirim Sanggahan",
@@ -132,6 +134,9 @@ export default function AjukanSanggahanPage() {
           </CardFooter>
         </Card>
       </form>
+
+      <DisputesHistoryTable />
+
     </main>
   );
 }
