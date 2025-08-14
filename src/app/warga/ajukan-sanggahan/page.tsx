@@ -15,6 +15,12 @@ export default function AjukanSanggahanPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
+          if (file.size > 500 * 1024) {
+            alert("Ukuran file terlalu besar. Maksimal 500 KB.");
+            e.target.value = ""; // Reset file input
+            setFileName(null);
+            return;
+          }
           setFileName(file.name);
       } else {
           setFileName(null);
@@ -50,7 +56,7 @@ export default function AjukanSanggahanPage() {
                 <Input id="file-upload" type="file" className="sr-only" accept="image/*" onChange={handleFileChange} />
                 {fileName && <p className="text-sm text-muted-foreground">{fileName}</p>}
              </div>
-             <p className="text-xs text-muted-foreground">Lampirkan bukti transfer atau foto pendukung lainnya.</p>
+             <p className="text-xs text-muted-foreground">Lampirkan bukti transfer atau foto pendukung lainnya. Unggah gambar (maks. 500 KB).</p>
           </div>
         </CardContent>
         <CardFooter>
