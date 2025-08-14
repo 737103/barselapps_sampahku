@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { ResidentsTable } from "@/components/rt/residents-table";
 import {
   Card,
@@ -14,13 +15,14 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { type Citizen } from "@/lib/data";
+import { type Citizen, type RTAccount } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
-import { addCitizen, getCitizensByRT, getCitizenByNIK } from "@/lib/firebase/firestore";
+import { addCitizen, getCitizensByRT, getCitizenByNIK, getRTAccountById } from "@/lib/firebase/firestore";
 
 export default function DataWargaPage() {
   const [residents, setResidents] = useState<Citizen[]>([]);
   const [loading, setLoading] = useState(true);
+  const [rtAccount, setRtAccount] = useState<RTAccount | null>(null);
   const [newResident, setNewResident] = useState({
     fullName: "",
     address: "",
@@ -28,18 +30,24 @@ export default function DataWargaPage() {
     kk: "",
   });
   const { toast } = useToast();
-  const currentRT = "001"; // Assuming static RT for now
-  const currentRW = "001"; // Assuming static RW for now
+  const searchParams = useSearchParams();
+  const accountId = searchParams.get('accountId');
 
   useEffect(() => {
-    const fetchCitizens = async () => {
-      setLoading(true);
-      const fetchedCitizens = await getCitizensByRT(currentRT, currentRW);
-      setResidents(fetchedCitizens);
-      setLoading(false);
+    const fetchAccountAndCitizens = async () => {
+      if (accountId) {
+        setLoading(true);
+        const account = await getRTAccountById(accountId);
+        setRtAccount(account);
+        if (account) {
+          const fetchedCitizens = await getCitizensByRT(account.rt, account.rw);
+          setResidents(fetchedCitizens);
+        }
+        setLoading(false);
+      }
     };
-    fetchCitizens();
-  }, [currentRT, currentRW]);
+    fetchAccountAndCitizens();
+  }, [accountId]);
 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,8 +57,16 @@ export default function DataWargaPage() {
 
   const handleSaveResident = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!rtAccount) {
+        toast({
+            title: "Data Akun RT Tidak Ditemukan",
+            description: "Tidak dapat menambahkan warga karena data akun RT tidak ditemukan.",
+            variant: "destructive",
+        });
+        return;
+    }
 
-    // Validation for required fields
     if (!newResident.fullName || !newResident.nik || !newResident.address) {
         toast({
             title: "Data Tidak Lengkap",
@@ -60,7 +76,6 @@ export default function DataWargaPage() {
         return;
     }
 
-    // Validation for NIK format (16 digits)
     const nikRegex = /^\d{16}$/;
     if (!nikRegex.test(newResident.nik)) {
         toast({
@@ -71,7 +86,6 @@ export default function DataWargaPage() {
         return;
     }
     
-    // Validation for KK format (16 digits, if provided)
     if (newResident.kk) {
         const kkRegex = /^\d{16}$/;
         if (!kkRegex.test(newResident.kk)) {
@@ -84,7 +98,6 @@ export default function DataWargaPage() {
         }
     }
 
-    // Validation for NIK uniqueness
     const existingCitizen = await getCitizenByNIK(newResident.nik);
     if (existingCitizen) {
         toast({
@@ -100,8 +113,8 @@ export default function DataWargaPage() {
       address: newResident.address,
       nik: newResident.nik,
       kk: newResident.kk,
-      rt: currentRT,
-      rw: currentRW,
+      rt: rtAccount.rt,
+      rw: rtAccount.rw,
     };
     
     const newCitizen = await addCitizen(citizenData);
@@ -112,7 +125,6 @@ export default function DataWargaPage() {
         title: "Data Warga Disimpan",
         description: `Warga baru "${newResident.fullName}" telah berhasil ditambahkan.`,
       });
-      // Reset form
       setNewResident({
           fullName: "",
           address: "",
@@ -186,7 +198,7 @@ export default function DataWargaPage() {
                 <Label htmlFor="rt">RT</Label>
                 <Input
                   id="rt"
-                  value={currentRT}
+                  value={rtAccount?.rt || '...'}
                   disabled
                 />
               </div>
@@ -194,19 +206,24 @@ export default function DataWargaPage() {
                 <Label htmlFor="rw">RW</Label>
                 <Input
                   id="rw"
-                  value={currentRW}
+                  value={rtAccount?.rw || '...'}
                   disabled
                 />
               </div>
             </div>
           </CardContent>
           <CardFooter>
-            <Button type="submit">Simpan Data Warga</Button>
+            <Button type="submit" disabled={loading}>Simpan Data Warga</Button>
           </CardFooter>
         </form>
       </Card>
 
-      <ResidentsTable residents={residents} setResidents={setResidents} loading={loading} />
+      <ResidentsTable 
+        residents={residents} 
+        setResidents={setResidents} 
+        loading={loading}
+        rtAccount={rtAccount}
+      />
     </div>
   );
 }

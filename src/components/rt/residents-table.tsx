@@ -13,7 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { type Citizen, type Payment } from "@/lib/data";
+import { type Citizen, type Payment, type RTAccount } from "@/lib/data";
 import { PaymentModal } from "./payment-modal";
 import { useToast } from '@/hooks/use-toast';
 import { id } from 'date-fns/locale';
@@ -36,9 +36,10 @@ type ResidentsTableProps = {
     residents: Citizen[];
     setResidents: React.Dispatch<React.SetStateAction<Citizen[]>>;
     loading?: boolean;
+    rtAccount: RTAccount | null;
 }
 
-export function ResidentsTable({ residents = [], setResidents = () => {}, loading = false }: ResidentsTableProps) {
+export function ResidentsTable({ residents = [], setResidents = () => {}, loading = false, rtAccount }: ResidentsTableProps) {
   const [selectedCitizen, setSelectedCitizen] = useState<Citizen | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -153,7 +154,7 @@ export function ResidentsTable({ residents = [], setResidents = () => {}, loadin
     <Card>
         <CardHeader className="flex flex-row items-center justify-between">
             <div>
-                <CardTitle>Data Warga RT 001</CardTitle>
+                <CardTitle>Data Warga RT {rtAccount?.rt || '...'} / RW {rtAccount?.rw || '...'}</CardTitle>
                 <CardDescription>Status pembayaran iuran sampah bulan ini.</CardDescription>
             </div>
              <Button>Kirim Pengingat</Button>
