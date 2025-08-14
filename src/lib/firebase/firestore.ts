@@ -1,6 +1,6 @@
 import { db } from "@/lib/firebase";
 import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, query, where, getDoc, serverTimestamp } from "firebase/firestore";
-import type { Citizen, RTAccount, Payment, Dispute } from "../data";
+import type { Citizen, RTAccount, Payment, Dispute, Notification } from "../data";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 
@@ -118,8 +118,9 @@ export const authenticateRT = async (username: string, password: string): Promis
         // For this prototype, we'll compare plaintext.
         if (userData.password === password) {
             // Update last login timestamp
-            await updateDoc(userDoc.ref, { lastLogin: format(new Date(), "yyyy-MM-dd HH:mm:ss") });
-            return { id: userDoc.id, ...userData };
+            const updatedUserData = { ...userData, lastLogin: format(new Date(), "yyyy-MM-dd HH:mm:ss") };
+            await updateDoc(userDoc.ref, { lastLogin: updatedUserData.lastLogin });
+            return { id: userDoc.id, ...updatedUserData };
         } else {
             console.log("Password does not match");
             return null;
@@ -364,3 +365,43 @@ export const updateAdminPassword = async (newPassword: string): Promise<boolean>
         return false;
     }
 };
+
+// --- Notification Functions ---
+const notificationsCollection = collection(db, "notifications");
+
+export const createNotification = async (notificationData: Omit<Notification, 'id' | 'createdAt' | 'isRead'>): Promise<Notification | null> => {
+    try {
+        const newNotificationData = {
+            ...notificationData,
+            createdAt: new Date().toISOString(),
+            isRead: false,
+        };
+        const docRef = await addDoc(notificationsCollection, newNotificationData);
+        return { id: docRef.id, ...newNotificationData };
+    } catch (error) {
+        console.error("Error creating notification: ", error);
+        return null;
+    }
+};
+
+export const getNotificationsForCitizen = async (citizenId: string): Promise<Notification[]> => {
+    try {
+        const q = query(notificationsCollection, where("citizenId", "==", citizenId), where("isRead", "==", false));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Notification));
+    } catch (error) {
+        console.error(`Error getting notifications for citizen ${citizenId}: `, error);
+        return [];
+    }
+};
+
+export const markNotificationAsRead = async (notificationId: string): Promise<boolean> => {
+    try {
+        const docRef = doc(db, "notifications", notificationId);
+        await updateDoc(docRef, { isRead: true });
+        return true;
+    } catch (error) {
+        console.error("Error marking notification as read: ", error);
+        return false;
+    }
+}

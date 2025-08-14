@@ -22,7 +22,7 @@ import { MoreHorizontal } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { EditResidentModal } from './edit-resident-modal';
 import { DeleteResidentAlert } from './delete-resident-alert';
-import { deleteCitizen, getPaymentsForCitizen, recordPayment, updateCitizen } from '@/lib/firebase/firestore';
+import { createNotification, deleteCitizen, getPaymentsForCitizen, recordPayment, updateCitizen } from '@/lib/firebase/firestore';
 
 type StatusVariant = "default" | "secondary" | "destructive";
 
@@ -148,12 +148,10 @@ export function ResidentsTable({ residents = [], setResidents = () => {}, loadin
       setSelectedCitizen(null);
   }
 
-  const handleSendReminder = () => {
-    // In a real app, this would trigger a backend process to send notifications.
-    // For this prototype, we'll just show a success toast.
-    const unpaidResidents = residents.filter(r => getPaymentStatus(r.id) === 'Belum Lunas').length;
+  const handleSendReminder = async () => {
+    const unpaidResidents = residents.filter(r => getPaymentStatus(r.id) === 'Belum Lunas');
 
-    if (unpaidResidents === 0) {
+    if (unpaidResidents.length === 0) {
        toast({
         title: "Tidak Ada Tunggakan",
         description: "Semua warga telah membayar iuran bulan ini.",
@@ -161,10 +159,31 @@ export function ResidentsTable({ residents = [], setResidents = () => {}, loadin
       return;
     }
     
-    toast({
-      title: "Pengingat Terkirim",
-      description: `Pengingat pembayaran telah dikirimkan kepada ${unpaidResidents} warga yang belum bayar.`,
-    });
+    let successCount = 0;
+    for (const resident of unpaidResidents) {
+        const notificationData = {
+            citizenId: resident.id,
+            message: `Mohon segera lakukan pembayaran iuran sampah untuk periode ${currentPeriod}.`,
+            type: 'payment_reminder' as const,
+        };
+        const result = await createNotification(notificationData);
+        if (result) {
+            successCount++;
+        }
+    }
+
+    if (successCount > 0) {
+        toast({
+          title: "Pengingat Terkirim",
+          description: `Pengingat pembayaran telah dikirimkan kepada ${successCount} warga yang belum bayar.`,
+        });
+    } else {
+        toast({
+            title: "Gagal Mengirim Pengingat",
+            description: "Terjadi kesalahan saat mengirim pengingat.",
+            variant: "destructive",
+        });
+    }
   };
 
 

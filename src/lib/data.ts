@@ -44,5 +44,14 @@ export type RTAccount = {
   isDeactivated?: boolean;
 };
 
+export type Notification = {
+    id: string;
+    citizenId: string;
+    message: string;
+    createdAt: string; 
+    isRead: boolean;
+    type: 'payment_reminder' | 'general';
+}
+
 // Mock data is now replaced by Firestore
 export const wargaHistory: Payment[] = [];
