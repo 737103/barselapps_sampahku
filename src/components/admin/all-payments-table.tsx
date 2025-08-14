@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import * as XLSX from "xlsx";
 import { type Payment } from "@/lib/data";
 import { getAllPayments, updatePayment, deletePayment } from "@/lib/firebase/firestore";
 import {
@@ -22,7 +23,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, MoreHorizontal } from "lucide-react";
+import { Calendar as CalendarIcon, MoreHorizontal, Download } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -33,6 +34,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { EditPaymentModal } from "./edit-payment-modal";
 import { useToast } from "@/hooks/use-toast";
 import { DeletePaymentAlert } from "./delete-payment-alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 
 type StatusVariant = "default" | "secondary" | "destructive";
@@ -49,6 +51,7 @@ export function AllPaymentsTable() {
   const [allPayments, setAllPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState<Date | undefined>();
+  const [selectedStatus, setSelectedStatus] = useState<Payment["status"] | "Semua">("Semua");
   const [currentPage, setCurrentPage] = useState(1);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
@@ -118,12 +121,18 @@ export function AllPaymentsTable() {
   }
 
   const filteredPayments = useMemo(() => {
-    if (!selectedPeriod) {
-        return allPayments;
+    let filtered = allPayments;
+
+    if (selectedPeriod) {
+        const formattedPeriod = format(selectedPeriod, "MMMM yyyy", { locale: id });
+        filtered = filtered.filter(p => p.period === formattedPeriod);
     }
-    const formattedPeriod = format(selectedPeriod, "MMMM yyyy", { locale: id });
-    return allPayments.filter(p => p.period === formattedPeriod);
-  }, [allPayments, selectedPeriod]);
+    if (selectedStatus !== "Semua") {
+        filtered = filtered.filter(p => p.status === selectedStatus);
+    }
+
+    return filtered;
+  }, [allPayments, selectedPeriod, selectedStatus]);
 
   const paginatedPayments = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -135,6 +144,46 @@ export function AllPaymentsTable() {
   const handlePeriodReset = () => {
     setSelectedPeriod(undefined);
     setCurrentPage(1);
+  }
+
+  const handleDownload = () => {
+    const dataToExport = filteredPayments.map(p => ({
+        "Nama Warga": p.citizen?.name || 'N/A',
+        "NIK": p.citizen?.nik || 'N/A',
+        "No. KK": p.citizen?.kk || 'N/A',
+        "Alamat": p.citizen?.address || 'N/A',
+        "RT/RW": `${p.citizen?.rt || 'N/A'}/${p.citizen?.rw || 'N/A'}`,
+        "Periode": p.period,
+        "Tanggal Bayar": p.paymentDate,
+        "Jumlah": p.amount,
+        "Status": p.status,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Pembayaran");
+
+    // Auto-size columns
+    const objectMaxLength = Object.keys(dataToExport[0] || {}).map(key => ({
+        wch: Math.max(...dataToExport.map(obj => obj[key as keyof typeof obj[0]]?.toString().length || 0), key.length)
+    }));
+    worksheet["!cols"] = objectMaxLength;
+
+    let fileName = "Laporan_Pembayaran";
+    if (selectedStatus !== "Semua") {
+        fileName += `_${selectedStatus}`;
+    }
+    if (selectedPeriod) {
+        fileName += `_${format(selectedPeriod, "MMMM_yyyy", { locale: id })}`;
+    }
+    fileName += ".xlsx";
+
+    XLSX.writeFile(workbook, fileName);
+
+    toast({
+      title: "Laporan Diunduh",
+      description: `File ${fileName} berhasil diunduh.`
+    })
   }
 
   return (
@@ -151,7 +200,7 @@ export function AllPaymentsTable() {
                         <Button
                         variant={"outline"}
                         className={cn(
-                            "w-[200px] justify-start text-left font-normal",
+                            "w-[180px] justify-start text-left font-normal",
                             !selectedPeriod && "text-muted-foreground"
                         )}
                         >
@@ -174,7 +223,22 @@ export function AllPaymentsTable() {
                         />
                     </PopoverContent>
                 </Popover>
-                {selectedPeriod && <Button variant="ghost" onClick={handlePeriodReset}>Reset</Button>}
+                 <Select value={selectedStatus} onValueChange={(value: Payment["status"] | "Semua") => setSelectedStatus(value)}>
+                    <SelectTrigger className="w-[150px]">
+                        <SelectValue placeholder="Filter Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Semua">Semua Status</SelectItem>
+                        <SelectItem value="Lunas">Lunas</SelectItem>
+                        <SelectItem value="Belum Lunas">Belum Lunas</SelectItem>
+                        <SelectItem value="Tertunda">Tertunda</SelectItem>
+                    </SelectContent>
+                </Select>
+                {selectedPeriod && <Button variant="ghost" size="sm" onClick={handlePeriodReset}>Reset</Button>}
+                 <Button onClick={handleDownload} disabled={loading || filteredPayments.length === 0}>
+                    <Download className="mr-2 h-4 w-4" />
+                    Unduh Laporan (XLS)
+                </Button>
             </div>
         </CardHeader>
         <CardContent>
@@ -215,6 +279,7 @@ export function AllPaymentsTable() {
                           <TableCell>{payment.paymentDate}</TableCell>
                            <TableCell>
                             {payment.proofUrl ? (
+                                <a href={payment.proofUrl} target="_blank" rel="noopener noreferrer">
                                 <Image 
                                     src={payment.proofUrl} 
                                     alt={`Bukti ${payment.period}`}
@@ -223,6 +288,7 @@ export function AllPaymentsTable() {
                                     className="rounded-md object-cover"
                                     data-ai-hint="receipt"
                                 />
+                                </a>
                             ) : '-'}
                         </TableCell>
                          <TableCell className="text-right">
@@ -251,7 +317,7 @@ export function AllPaymentsTable() {
                       ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={10} className="text-center">Tidak ada data pembayaran untuk periode yang dipilih.</TableCell>
+                      <TableCell colSpan={10} className="text-center">Tidak ada data pembayaran untuk filter yang dipilih.</TableCell>
                     </TableRow>
                   )}
                 </TableBody>
