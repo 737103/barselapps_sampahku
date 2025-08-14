@@ -70,6 +70,19 @@ export default function DataWargaPage() {
         });
         return;
     }
+    
+    // Validation for KK format (16 digits, if provided)
+    if (newResident.kk) {
+        const kkRegex = /^\d{16}$/;
+        if (!kkRegex.test(newResident.kk)) {
+            toast({
+                title: "Format No. KK Salah",
+                description: "No. KK harus terdiri dari 16 digit angka.",
+                variant: "destructive",
+            });
+            return;
+        }
+    }
 
     // Validation for NIK uniqueness
     const existingCitizen = await getCitizenByNIK(newResident.nik);
