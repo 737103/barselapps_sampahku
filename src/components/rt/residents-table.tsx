@@ -23,7 +23,7 @@ import { MoreHorizontal } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { EditResidentModal } from './edit-resident-modal';
 import { DeleteResidentAlert } from './delete-resident-alert';
-import { createNotification, deleteCitizen, getPaymentsForCitizen, recordPayment, updateCitizen } from '@/lib/firebase/firestore';
+import { createNotification, deleteCitizen, getPaymentsByRT, recordPayment, updateCitizen } from '@/lib/firebase/firestore';
 
 type StatusVariant = "default" | "secondary" | "destructive";
 
@@ -65,21 +65,25 @@ export function ResidentsTable({
 
   useEffect(() => {
     const fetchPayments = async () => {
-      if (residents.length > 0) {
+      if (rtAccount) {
+        const paymentList = await getPaymentsByRT(rtAccount.rt, rtAccount.rw);
         const paymentMap = new Map<string, Payment>();
-        for (const resident of residents) {
-          const citizenPayments = await getPaymentsForCitizen(resident.id);
-          const periodPayment = citizenPayments.find(p => p.period === currentPeriod);
-
-          if (periodPayment) {
-            paymentMap.set(resident.id, periodPayment);
-          }
-        }
+        paymentList.forEach(payment => {
+           if (payment.period === currentPeriod) {
+            // Logic to handle multiple payments in the same period, taking the latest one.
+            const existingPayment = paymentMap.get(payment.citizenId);
+            if (!existingPayment || new Date(payment.paymentDate) > new Date(existingPayment.paymentDate)) {
+               paymentMap.set(payment.citizenId, payment);
+            }
+           }
+        });
         setPayments(paymentMap);
       }
     };
-    fetchPayments();
-  }, [residents, currentPeriod]);
+    if (rtAccount) {
+      fetchPayments();
+    }
+  }, [rtAccount, currentPeriod]);
 
 
   const getPaymentForCitizen = (citizenId: string): Payment | undefined => {
@@ -243,7 +247,7 @@ export function ResidentsTable({
                   ) : paginatedResidents.length > 0 ? (
                     paginatedResidents.map((resident) => {
                       const payment = getPaymentForCitizen(resident.id);
-                      const paymentStatus = payment && payment.period === currentPeriod ? payment.status : "Belum Lunas";
+                      const paymentStatus = payment ? payment.status : "Belum Lunas";
                       return (
                         <TableRow key={resident.id}>
                           <TableCell className="font-medium">{resident.name}</TableCell>
