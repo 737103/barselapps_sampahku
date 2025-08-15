@@ -8,7 +8,7 @@ export default function LoginPage() {
       <div className="mx-auto flex w-full max-w-[350px] flex-col justify-center space-y-6">
         <div className="flex flex-col items-center space-y-2 text-center">
           <Icons.logo className="h-12 w-12" />
-          <h1 className="text-2xl font-semibold tracking-tight font-headline">
+          <h1 className="text-2xl font-semibold tracking-tight font-headline text-secondary">
             SampahKU
           </h1>
           <p className="text-sm text-muted-foreground">
