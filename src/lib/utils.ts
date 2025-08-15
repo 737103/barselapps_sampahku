@@ -51,3 +51,39 @@ export function compressImage(file: File, maxWidth: number, maxHeight: number): 
     }
   });
 }
+
+
+export function terbilang(n: number): string {
+    if (n < 0) return `minus ${terbilang(Math.abs(n))}`;
+
+    const bilangan = [
+        "", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan", "sepuluh", "sebelas"
+    ];
+
+    let temp = "";
+    if (n < 12) {
+        temp = ` ${bilangan[n]}`;
+    } else if (n < 20) {
+        temp = `${terbilang(n - 10)} belas`;
+    } else if (n < 100) {
+        temp = `${terbilang(Math.floor(n / 10))} puluh${terbilang(n % 10)}`;
+    } else if (n < 200) {
+        temp = ` seratus${terbilang(n - 100)}`;
+    } else if (n < 1000) {
+        temp = `${terbilang(Math.floor(n / 100))} ratus${terbilang(n % 100)}`;
+    } else if (n < 2000) {
+        temp = ` seribu${terbilang(n - 1000)}`;
+    } else if (n < 1000000) {
+        temp = `${terbilang(Math.floor(n / 1000))} ribu${terbilang(n % 1000)}`;
+    } else if (n < 1000000000) {
+        temp = `${terbilang(Math.floor(n / 1000000))} juta${terbilang(n % 1000000)}`;
+    } else if (n < 1000000000000) {
+        temp = `${terbilang(Math.floor(n / 1000000000))} milyar${terbilang(n % 1000000000)}`;
+    } else if (n < 1000000000000000) {
+        temp = `${terbilang(Math.floor(n / 1000000000000))} trilyun${terbilang(n % 1000000000000)}`;
+    }
+    
+    // Capitalize first letter and trim leading/trailing spaces
+    const result = temp.trim();
+    return result.charAt(0).toUpperCase() + result.slice(1);
+}

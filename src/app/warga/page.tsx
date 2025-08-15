@@ -10,9 +10,11 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertCircle, FileText, Megaphone, X } from "lucide-react";
 import type { Notification, Payment } from "@/lib/data";
 import { getNotificationsForCitizen, markNotificationAsRead, getPaymentsForCitizen } from "@/lib/firebase/firestore";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import { id } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
+import jsPDF from "jspdf";
+import { terbilang } from "@/lib/utils";
 
 export default function WargaDashboardPage() {
   const [paymentStatus, setPaymentStatus] = useState<Payment['status'] | "Loading">("Loading");
@@ -50,29 +52,69 @@ export default function WargaDashboardPage() {
   };
 
   const handleDownloadReceipt = () => {
-    if (!currentPayment || !currentPayment.proofUrl) {
+    if (!currentPayment || currentPayment.status !== "Lunas") {
       toast({
-        title: "Gagal Mengunduh",
-        description: "Tidak ada bukti pembayaran (kuitansi) yang tersedia untuk diunduh.",
+        title: "Gagal Membuat Kuitansi",
+        description: "Kuitansi hanya dapat diunduh untuk pembayaran yang lunas.",
         variant: "destructive"
       });
       return;
     }
     
-    const link = document.createElement('a');
-    link.href = currentPayment.proofUrl;
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const citizenName = currentPayment.citizen?.name || 'Warga';
+    const paymentDate = currentPayment.paymentDate ? parse(currentPayment.paymentDate, 'yyyy-MM-dd', new Date()) : new Date();
+    const formattedDate = format(paymentDate, "dd MMMM yyyy", { locale: id });
 
-    const fileExtension = currentPayment.proofUrl.split('.').pop()?.split('?')[0] || 'png';
-    const fileName = `Kuitansi_${currentPayment.citizen?.name?.replace(/ /g, '_')}_${currentPayment.period.replace(/ /g, '_')}.${fileExtension}`;
-    link.download = fileName;
+    // --- Receipt Content ---
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text("KWITANSI", pageWidth / 2, 20, { align: 'center' });
+
+    doc.setLineWidth(0.5);
+    doc.line(10, 25, pageWidth - 10, 25);
     
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+
+    // Details Section
+    const startY = 40;
+    const lineHeight = 10;
+    const labelX = 15;
+    const valueX = 55;
+
+    doc.text("Sudah terima dari", labelX, startY);
+    doc.text(":", valueX - 2, startY);
+    doc.text(citizenName, valueX, startY);
+
+    doc.text("Uang Sebesar", labelX, startY + lineHeight);
+    doc.text(":", valueX - 2, startY + lineHeight);
+    doc.setFont('helvetica', 'italic');
+    doc.text(`${terbilang(currentPayment.amount)} Rupiah`, valueX, startY + lineHeight);
+    doc.setFont('helvetica', 'normal');
+
+    doc.text("Untuk Pembayaran", labelX, startY + lineHeight * 2);
+    doc.text(":", valueX - 2, startY + lineHeight * 2);
+    doc.text(`Iuran sampah bulan ${currentPayment.period}`, valueX, startY + lineHeight * 2);
+
+    // Amount Box
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Rp. ${currentPayment.amount.toLocaleString('id-ID')},-`, labelX, startY + lineHeight * 4);
+    doc.setFont('helvetica', 'normal');
+
+    // Signature section
+    const signatureX = pageWidth - 70;
+    doc.text(`Makassar, ${formattedDate}`, signatureX, startY + lineHeight * 4);
+    doc.text("Kolektor Sampah,", signatureX, startY + lineHeight * 6);
+    doc.text("Juliati S", signatureX, startY + lineHeight * 9);
+
+
+    doc.save(`Kuitansi_${citizenName.replace(/ /g, '_')}_${currentPayment.period.replace(/ /g, '_')}.pdf`);
 
     toast({
-      title: "Berhasil Mengunduh",
-      description: `File ${fileName} telah diunduh.`
+      title: "Berhasil Mengunduh Kuitansi",
+      description: "File PDF kuitansi telah diunduh."
     });
   }
   
@@ -111,7 +153,7 @@ export default function WargaDashboardPage() {
                     <CardDescription>Status pembayaran iuran sampah Anda untuk bulan berjalan.</CardDescription>
                 </div>
                 {paymentStatus === "Lunas" && (
-                    <Button variant="outline" onClick={handleDownloadReceipt} disabled={!currentPayment?.proofUrl}>
+                    <Button variant="outline" onClick={handleDownloadReceipt} disabled={!currentPayment}>
                         <FileText className="mr-2 h-4 w-4"/>
                         Unduh Kuitansi
                     </Button>
