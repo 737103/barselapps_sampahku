@@ -101,7 +101,7 @@ export function EditResidentModal({ isOpen, onOpenChange, citizen, onSave }: Edi
                 <Label htmlFor="name">Nama Lengkap</Label>
                 <Input
                   id="name"
-                  value={formData.name}
+                  value={formData.name || ""}
                   onChange={handleChange}
                   required
                 />
@@ -110,7 +110,7 @@ export function EditResidentModal({ isOpen, onOpenChange, citizen, onSave }: Edi
                 <Label htmlFor="address">Alamat Lengkap</Label>
                 <Input
                   id="address"
-                  value={formData.address}
+                  value={formData.address || ""}
                   onChange={handleChange}
                   required
                 />
@@ -120,7 +120,7 @@ export function EditResidentModal({ isOpen, onOpenChange, citizen, onSave }: Edi
                 <Input
                   id="nik"
                   maxLength={16}
-                  value={formData.nik}
+                  value={formData.nik || ""}
                   onChange={handleChange}
                   required
                   type="text"
@@ -131,7 +131,7 @@ export function EditResidentModal({ isOpen, onOpenChange, citizen, onSave }: Edi
                 <Input
                   id="kk"
                   maxLength={16}
-                  value={formData.kk}
+                  value={formData.kk || ""}
                   onChange={handleChange}
                   type="text"
                   required
@@ -141,7 +141,7 @@ export function EditResidentModal({ isOpen, onOpenChange, citizen, onSave }: Edi
                 <Label htmlFor="couponNumber">No. Kupon Sampah</Label>
                 <Input
                   id="couponNumber"
-                  value={formData.couponNumber}
+                  value={formData.couponNumber || ""}
                   onChange={handleChange}
                   type="text"
                   required
