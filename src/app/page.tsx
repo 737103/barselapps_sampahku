@@ -17,7 +17,7 @@ export default function LoginPage() {
         </div>
         <LoginForm />
         <p className="px-8 text-center text-sm text-muted-foreground">
-          Copyright 2024 SampahKU
+          Copyright 2024 SampahKU Kel. Bara Baraya Selatan
         </p>
       </div>
     </div>
