@@ -37,8 +37,17 @@ export default function WargaDashboardPage() {
         setPaymentStatus("Loading");
         const payments = await getPaymentsForCitizen(citizenId);
         const currentMonthPayment = payments.find(p => p.period === currentPeriod);
-        setPaymentStatus(currentMonthPayment?.status ?? "Belum Lunas");
-        setCurrentPayment(currentMonthPayment || null);
+        
+        if (currentMonthPayment) {
+            setPaymentStatus(currentMonthPayment.status);
+            setCurrentPayment(currentMonthPayment);
+        } else {
+            // Find the latest payment to determine status if no payment for current month
+            const latestPayment = payments.sort((a,b) => new Date(b.paymentDate).getTime() - new Date(a.paymentDate).getTime())[0];
+            const status = latestPayment ? latestPayment.status : "Belum Lunas";
+            setPaymentStatus(status);
+            setCurrentPayment(null); // No payment for this specific period
+        }
       }
     };
     fetchData();
