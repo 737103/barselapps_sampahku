@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { MoreHorizontal } from "lucide-react";
 import {
   DropdownMenu,
@@ -37,17 +37,22 @@ const badgeVariant: Record<Dispute["status"], BadgeVariant> = {
     "Ditolak": "outline",
 }
 
+const ITEMS_PER_PAGE = 3;
+
 export function DisputesTable() {
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
 
   useEffect(() => {
     const fetchDisputes = async () => {
         setLoading(true);
         const fetchedDisputes = await getAllDisputes();
+        // Sort by date to show the latest disputes first
+        fetchedDisputes.sort((a, b) => new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime());
         setDisputes(fetchedDisputes);
         setLoading(false);
     }
@@ -82,6 +87,12 @@ export function DisputesTable() {
     setIsDetailModalOpen(true);
   }
 
+  const paginatedDisputes = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return disputes.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [disputes, currentPage]);
+
+  const totalPages = Math.ceil(disputes.length / ITEMS_PER_PAGE);
 
   return (
     <>
@@ -107,8 +118,8 @@ export function DisputesTable() {
                     <TableRow>
                         <TableCell colSpan={6} className="text-center">Memuat data sanggahan...</TableCell>
                     </TableRow>
-                ) : disputes.length > 0 ? (
-                    disputes.map((dispute) => (
+                ) : paginatedDisputes.length > 0 ? (
+                    paginatedDisputes.map((dispute) => (
                         <TableRow key={dispute.id}>
                         <TableCell className="font-medium">{dispute.citizenName}</TableCell>
                         <TableCell>{`RT ${dispute.rt} / RW ${dispute.rw}`}</TableCell>
@@ -169,6 +180,29 @@ export function DisputesTable() {
                 </TableBody>
             </Table>
         </CardContent>
+         {totalPages > 1 && (
+            <CardFooter className="flex justify-between">
+                <span className="text-sm text-muted-foreground">
+                    Halaman {currentPage} dari {totalPages}
+                </span>
+                <div className="flex gap-2">
+                    <Button 
+                        variant="outline"
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                    >
+                        Sebelumnya
+                    </Button>
+                    <Button
+                        variant="outline"
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                    >
+                        Berikutnya
+                    </Button>
+                </div>
+            </CardFooter>
+        )}
     </Card>
     {selectedDispute && (
         <CitizenDetailModal
