@@ -7,6 +7,7 @@ export type Citizen = {
   address: string;
   rt: string;
   rw: string;
+  couponNumber: string;
 };
 
 export type Payment = {

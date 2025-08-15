@@ -49,6 +49,10 @@ export function ViewCitizenDetailsModal({ isOpen, onOpenChange, citizen }: ViewC
                 <p className="text-muted-foreground">RT/RW</p>
                 <p className="col-span-2">{`${citizen.rt}/${citizen.rw}`}</p>
             </div>
+            <div className="grid grid-cols-3 items-start gap-x-4 gap-y-2">
+                <p className="text-muted-foreground">No. Kupon</p>
+                <p className="col-span-2">{citizen.couponNumber}</p>
+            </div>
           </div>
           <DialogFooter>
             <Button type="button" onClick={() => onOpenChange(false)}>Tutup</Button>

@@ -117,6 +117,15 @@ export default function WargaProfilePage() {
                 onChange={handleInputChange}
               />
             </div>
+             <div className="space-y-2">
+              <Label htmlFor="couponNumber">No. Kupon</Label>
+              <Input
+                id="couponNumber"
+                value={citizen.couponNumber}
+                disabled
+              />
+               <p className="text-xs text-muted-foreground">No. Kupon tidak dapat diubah. Hubungi admin untuk perubahan.</p>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="rt">RT</Label>
               <Input

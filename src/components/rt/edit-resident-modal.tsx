@@ -42,10 +42,10 @@ export function EditResidentModal({ isOpen, onOpenChange, citizen, onSave }: Edi
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.fullName || !formData.address || !formData.nik || !formData.kk) {
+    if (!formData.name || !formData.address || !formData.nik || !formData.kk || !formData.couponNumber) {
        toast({
             title: "Data Tidak Lengkap",
-            description: "Mohon isi semua kolom yang wajib diisi (Nama, Alamat, NIK, No. KK).",
+            description: "Mohon isi semua kolom yang wajib diisi (Nama, Alamat, NIK, No. KK, No. Kupon).",
             variant: "destructive",
         });
         return;
@@ -132,6 +132,16 @@ export function EditResidentModal({ isOpen, onOpenChange, citizen, onSave }: Edi
                   id="kk"
                   maxLength={16}
                   value={formData.kk}
+                  onChange={handleChange}
+                  type="text"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="couponNumber">No. Kupon Sampah</Label>
+                <Input
+                  id="couponNumber"
+                  value={formData.couponNumber}
                   onChange={handleChange}
                   type="text"
                   required

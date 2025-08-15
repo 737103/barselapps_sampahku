@@ -28,6 +28,7 @@ export default function DataWargaPage() {
     address: "",
     nik: "",
     kk: "",
+    couponNumber: "",
   });
   const { toast } = useToast();
   const searchParams = useSearchParams();
@@ -67,10 +68,10 @@ export default function DataWargaPage() {
         return;
     }
 
-    if (!newResident.fullName || !newResident.nik || !newResident.address || !newResident.kk) {
+    if (!newResident.fullName || !newResident.nik || !newResident.address || !newResident.kk || !newResident.couponNumber) {
         toast({
             title: "Data Tidak Lengkap",
-            description: "Mohon isi semua kolom yang wajib diisi (Nama, Alamat, NIK, No. KK).",
+            description: "Mohon isi semua kolom yang wajib diisi (Nama, Alamat, NIK, No. KK, No. Kupon).",
             variant: "destructive",
         });
         return;
@@ -111,6 +112,7 @@ export default function DataWargaPage() {
       address: newResident.address,
       nik: newResident.nik,
       kk: newResident.kk,
+      couponNumber: newResident.couponNumber,
       rt: rtAccount.rt,
       rw: rtAccount.rw,
     };
@@ -128,6 +130,7 @@ export default function DataWargaPage() {
           address: "",
           nik: "",
           kk: "",
+          couponNumber: "",
       });
     } else {
         toast({
@@ -190,6 +193,17 @@ export default function DataWargaPage() {
                   placeholder="Masukkan 16 digit No. KK"
                   maxLength={16}
                   value={newResident.kk}
+                  onChange={handleInputChange}
+                  type="text"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="couponNumber">No. Kupon Sampah</Label>
+                <Input
+                  id="couponNumber"
+                  placeholder="Masukkan nomor kupon"
+                  value={newResident.couponNumber}
                   onChange={handleInputChange}
                   type="text"
                   required
