@@ -11,7 +11,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "WastePay",
+  title: "SampahKU",
   description: "Aplikasi Pembayaran Iuran Sampah",
 };
 

@@ -9,7 +9,7 @@ export default function LoginPage() {
         <div className="flex flex-col items-center space-y-2 text-center">
           <Icons.logo className="h-12 w-12" />
           <h1 className="text-2xl font-semibold tracking-tight font-headline">
-            WastePay
+            SampahKU
           </h1>
           <p className="text-sm text-muted-foreground">
             Aplikasi Pembayaran Iuran Sampah
@@ -17,7 +17,7 @@ export default function LoginPage() {
         </div>
         <LoginForm />
         <p className="px-8 text-center text-sm text-muted-foreground">
-          Copyright 2024 WastePay
+          Copyright 2024 SampahKU
         </p>
       </div>
     </div>
