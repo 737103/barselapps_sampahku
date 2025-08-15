@@ -4,7 +4,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { type Citizen, type Payment, type RTAccount } from "@/lib/data";
-import { getCitizensByRT, getRTAccountById, recordPayment, createNotification, getPaymentsByRT } from "@/lib/firebase/firestore";
+import { getCitizensByRT, getRTAccountById, recordPayment, createNotification, getPaymentsByRT, updatePayment } from "@/lib/firebase/firestore";
 import {
   Table,
   TableBody,
@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, MoreHorizontal } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -32,6 +32,8 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { PaymentModal } from "@/components/rt/payment-modal";
 import Image from "next/image";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { EditPaymentModal } from "@/components/rt/edit-payment-modal";
 
 
 type StatusVariant = "default" | "secondary" | "destructive";
@@ -52,7 +54,9 @@ export default function PembayaranPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<Date>(new Date());
   const [currentPage, setCurrentPage] = useState(1);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedCitizen, setSelectedCitizen] = useState<Citizen | null>(null);
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
 
   const searchParams = useSearchParams();
   const accountId = searchParams.get('accountId');
@@ -60,8 +64,7 @@ export default function PembayaranPage() {
   
   const formattedPeriod = format(selectedPeriod, "MMMM yyyy", { locale: id });
 
-  useEffect(() => {
-    const fetchAccountAndData = async () => {
+  const fetchAllData = async () => {
       if (accountId) {
         setLoading(true);
         const account = await getRTAccountById(accountId);
@@ -74,13 +77,20 @@ export default function PembayaranPage() {
         }
         setLoading(false);
       }
-    };
-    fetchAccountAndData();
+  };
+
+  useEffect(() => {
+    fetchAllData();
   }, [accountId]);
 
   const handleRecordPayment = (citizen: Citizen) => {
     setSelectedCitizen(citizen);
     setIsPaymentModalOpen(true);
+  }
+
+  const handleEditPayment = (payment: Payment) => {
+    setSelectedPayment(payment);
+    setIsEditModalOpen(true);
   }
 
   const handleSavePayment = async (paymentData: Omit<Payment, 'id' | 'citizenId' | 'proofUrl'> & { citizenName: string }) => {
@@ -89,11 +99,7 @@ export default function PembayaranPage() {
     const newPayment = await recordPayment(selectedCitizen.id, paymentData);
 
     if(newPayment) {
-      // Re-fetch payments to ensure data is up-to-date
-      if(rtAccount) {
-         const fetchedPayments = await getPaymentsByRT(rtAccount.rt, rtAccount.rw);
-         setPayments(fetchedPayments);
-      }
+      await fetchAllData(); // Refetch all data to stay in sync
       toast({
           title: "Pembayaran Berhasil Disimpan",
           description: `Pembayaran untuk ${paymentData.citizenName} periode ${paymentData.period} telah dicatat.`,
@@ -108,11 +114,31 @@ export default function PembayaranPage() {
     setIsPaymentModalOpen(false);
     setSelectedCitizen(null);
   }
+  
+  const handleUpdatePayment = async (paymentToUpdate: Payment) => {
+    const success = await updatePayment(paymentToUpdate.id, paymentToUpdate);
+    if (success) {
+      await fetchAllData(); // Refetch all data to stay in sync
+      toast({
+        title: "Pembayaran Diperbarui",
+        description: "Data pembayaran telah berhasil diperbarui.",
+      });
+    } else {
+      toast({
+        title: "Gagal Memperbarui",
+        description: "Terjadi kesalahan saat memperbarui pembayaran.",
+        variant: "destructive",
+      });
+    }
+    setIsEditModalOpen(false);
+    setSelectedPayment(null);
+  };
+
 
   const handleSendReminder = async () => {
     const unpaidResidents = residents.filter(r => {
         const paymentForPeriod = payments.find(p => p.citizenId === r.id && p.period === formattedPeriod);
-        return !paymentForPeriod;
+        return !paymentForPeriod || paymentForPeriod.status !== 'Lunas';
     });
 
     if (unpaidResidents.length === 0) {
@@ -163,8 +189,8 @@ export default function PembayaranPage() {
       <Card>
         <CardHeader className="flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <CardTitle>Catat Pembayaran Warga</CardTitle>
-                <CardDescription>Pilih warga untuk mencatat pembayaran iuran sampah.</CardDescription>
+                <CardTitle>Catat & Kelola Pembayaran Warga</CardTitle>
+                <CardDescription>Catat atau ubah data pembayaran iuran sampah.</CardDescription>
             </div>
             <div className="flex items-center gap-2">
                 <Popover>
@@ -205,7 +231,7 @@ export default function PembayaranPage() {
                     <TableHead>Nama Warga</TableHead>
                     <TableHead>NIK</TableHead>
                     <TableHead>Status Pembayaran</TableHead>
-                    <TableHead>Periode</TableHead>
+                    <TableHead>Jumlah</TableHead>
                     <TableHead>Bukti</TableHead>
                     <TableHead className="text-right">Aksi</TableHead>
                 </TableRow>
@@ -228,9 +254,12 @@ export default function PembayaranPage() {
                                   {paymentStatus}
                               </Badge>
                           </TableCell>
-                          <TableCell>{paymentForPeriod?.period || "-"}</TableCell>
+                          <TableCell>
+                            {paymentForPeriod ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(paymentForPeriod.amount) : "-"}
+                          </TableCell>
                            <TableCell>
                             {paymentForPeriod?.proofUrl ? (
+                                <a href={paymentForPeriod.proofUrl} target="_blank" rel="noopener noreferrer">
                                 <Image 
                                     src={paymentForPeriod.proofUrl} 
                                     alt={`Bukti ${paymentForPeriod.period}`}
@@ -239,12 +268,30 @@ export default function PembayaranPage() {
                                     className="rounded-md object-cover"
                                     data-ai-hint="receipt"
                                 />
+                                </a>
                             ) : '-'}
                         </TableCell>
                           <TableCell className="text-right">
-                            <Button variant="outline" size="sm" onClick={() => handleRecordPayment(resident)}>
-                                Catat Pembayaran
-                            </Button>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                        <span className="sr-only">Buka menu</span>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+                                    {paymentForPeriod ? (
+                                        <DropdownMenuItem onClick={() => handleEditPayment(paymentForPeriod)}>
+                                            Edit Pembayaran
+                                        </DropdownMenuItem>
+                                    ) : (
+                                        <DropdownMenuItem onClick={() => handleRecordPayment(resident)}>
+                                            Catat Pembayaran
+                                        </DropdownMenuItem>
+                                    )}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                           </TableCell>
                         </TableRow>
                       )
@@ -257,6 +304,7 @@ export default function PembayaranPage() {
                 </TableBody>
             </Table>
         </CardContent>
+        {totalPages > 1 && (
         <CardFooter className="flex justify-between">
             <span className="text-sm text-muted-foreground">
                 Halaman {currentPage} dari {totalPages}
@@ -278,6 +326,7 @@ export default function PembayaranPage() {
                 </Button>
             </div>
         </CardFooter>
+        )}
       </Card>
       {selectedCitizen && (
         <PaymentModal 
@@ -287,6 +336,15 @@ export default function PembayaranPage() {
             onSave={handleSavePayment}
         />
       )}
+      {selectedPayment && (
+        <EditPaymentModal
+            isOpen={isEditModalOpen}
+            onOpenChange={setIsEditModalOpen}
+            payment={selectedPayment}
+            onSave={handleUpdatePayment}
+        />
+      )}
     </>
   );
 }
+
