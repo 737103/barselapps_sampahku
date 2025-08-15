@@ -39,7 +39,6 @@ function WargaLayoutContent({
   const navItems = [
     { href: `/warga?citizenId=${citizenId}`, label: "Dashboard", icon: LayoutDashboard, isActive: pathname === '/warga' },
     { href: `/warga/riwayat-pembayaran?citizenId=${citizenId}`, label: "Riwayat Pembayaran", icon: History, isActive: pathname.startsWith('/warga/riwayat-pembayaran') },
-    { href: `/warga/ajukan-sanggahan?citizenId=${citizenId}`, label: "Ajukan Sanggahan", icon: MessageSquarePlus, isActive: pathname.startsWith('/warga/ajukan-sanggahan') },
     { href: `/warga/profile?citizenId=${citizenId}`, label: "Profile", icon: Settings, isActive: pathname.startsWith('/warga/profile') },
   ];
 
