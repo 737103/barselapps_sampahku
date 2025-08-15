@@ -116,7 +116,7 @@ export function EditResidentModal({ isOpen, onOpenChange, citizen, onSave }: Edi
                   value={formData.nik}
                   onChange={handleChange}
                   required
-                  type="number"
+                  type="text"
                 />
               </div>
               <div className="space-y-2">
@@ -126,7 +126,7 @@ export function EditResidentModal({ isOpen, onOpenChange, citizen, onSave }: Edi
                   maxLength={16}
                   value={formData.kk}
                   onChange={handleChange}
-                  type="number"
+                  type="text"
                 />
               </div>
           </div>
