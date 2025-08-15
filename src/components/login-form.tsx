@@ -90,9 +90,24 @@ export function LoginForm() {
     <div className={cn("grid gap-6")}>
       <Tabs defaultValue="warga" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="warga">Warga</TabsTrigger>
-          <TabsTrigger value="rt">Ketua RT</TabsTrigger>
-          <TabsTrigger value="admin">Admin</TabsTrigger>
+          <TabsTrigger 
+            value="warga" 
+            className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+          >
+            Warga
+          </TabsTrigger>
+          <TabsTrigger 
+            value="rt"
+            className="data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground"
+          >
+            Ketua RT
+          </TabsTrigger>
+          <TabsTrigger 
+            value="admin"
+            className="data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
+          >
+            Admin
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="warga">
