@@ -12,12 +12,15 @@ import type { Notification, Payment } from "@/lib/data";
 import { getNotificationsForCitizen, markNotificationAsRead, getPaymentsForCitizen } from "@/lib/firebase/firestore";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
+import { useToast } from "@/hooks/use-toast";
 
 export default function WargaDashboardPage() {
   const [paymentStatus, setPaymentStatus] = useState<Payment['status'] | "Loading">("Loading");
+  const [currentPayment, setCurrentPayment] = useState<Payment | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const searchParams = useSearchParams();
   const citizenId = searchParams.get("citizenId");
+  const { toast } = useToast();
 
   const currentPeriod = format(new Date(), "MMMM yyyy", { locale: id });
 
@@ -33,6 +36,7 @@ export default function WargaDashboardPage() {
         const payments = await getPaymentsForCitizen(citizenId);
         const currentMonthPayment = payments.find(p => p.period === currentPeriod);
         setPaymentStatus(currentMonthPayment?.status ?? "Belum Lunas");
+        setCurrentPayment(currentMonthPayment || null);
       }
     };
     fetchData();
@@ -44,6 +48,33 @@ export default function WargaDashboardPage() {
       setNotifications(prev => prev.filter(n => n.id !== notificationId));
     }
   };
+
+  const handleDownloadReceipt = () => {
+    if (!currentPayment || !currentPayment.proofUrl) {
+      toast({
+        title: "Gagal Mengunduh",
+        description: "Tidak ada bukti pembayaran (kuitansi) yang tersedia untuk diunduh.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const link = document.createElement('a');
+    link.href = currentPayment.proofUrl;
+
+    const fileExtension = currentPayment.proofUrl.split('.').pop()?.split('?')[0] || 'png';
+    const fileName = `Kuitansi_${currentPayment.citizen?.name?.replace(/ /g, '_')}_${currentPayment.period.replace(/ /g, '_')}.${fileExtension}`;
+    link.download = fileName;
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Berhasil Mengunduh",
+      description: `File ${fileName} telah diunduh.`
+    });
+  }
   
   return (
     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8 bg-muted/40">
@@ -80,7 +111,10 @@ export default function WargaDashboardPage() {
                     <CardDescription>Status pembayaran iuran sampah Anda untuk bulan berjalan.</CardDescription>
                 </div>
                 {paymentStatus === "Lunas" && (
-                    <Button variant="outline"><FileText className="mr-2 h-4 w-4"/>Unduh Kuitansi</Button>
+                    <Button variant="outline" onClick={handleDownloadReceipt} disabled={!currentPayment?.proofUrl}>
+                        <FileText className="mr-2 h-4 w-4"/>
+                        Unduh Kuitansi
+                    </Button>
                 )}
             </CardHeader>
             <CardContent>
