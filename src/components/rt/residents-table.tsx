@@ -83,7 +83,7 @@ export function ResidentsTable({
     if (rtAccount) {
       fetchPayments();
     }
-  }, [rtAccount, currentPeriod]);
+  }, [rtAccount, currentPeriod, residents]);
 
 
   const getPaymentForCitizen = (citizenId: string): Payment | undefined => {
@@ -233,6 +233,7 @@ export function ResidentsTable({
                     <TableHead>Nama Warga</TableHead>
                     <TableHead>NIK</TableHead>
                     <TableHead>No. KK</TableHead>
+                    <TableHead>No. Kupon</TableHead>
                     <TableHead>Alamat</TableHead>
                     <TableHead>Status Pembayaran</TableHead>
                     <TableHead>Periode</TableHead>
@@ -242,7 +243,7 @@ export function ResidentsTable({
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center">Memuat data...</TableCell>
+                      <TableCell colSpan={8} className="text-center">Memuat data...</TableCell>
                     </TableRow>
                   ) : paginatedResidents.length > 0 ? (
                     paginatedResidents.map((resident) => {
@@ -253,6 +254,7 @@ export function ResidentsTable({
                           <TableCell className="font-medium">{resident.name}</TableCell>
                           <TableCell>{resident.nik}</TableCell>
                           <TableCell>{resident.kk}</TableCell>
+                          <TableCell>{resident.couponNumber}</TableCell>
                           <TableCell>{resident.address}</TableCell>
                           <TableCell>
                               <Badge variant={badgeVariant[paymentStatus]}>
@@ -291,7 +293,7 @@ export function ResidentsTable({
                     })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center">Belum ada warga terdaftar.</TableCell>
+                      <TableCell colSpan={8} className="text-center">Belum ada warga terdaftar.</TableCell>
                     </TableRow>
                   )}
                 </TableBody>
