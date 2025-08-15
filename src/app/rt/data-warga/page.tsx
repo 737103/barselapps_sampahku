@@ -67,10 +67,10 @@ export default function DataWargaPage() {
         return;
     }
 
-    if (!newResident.fullName || !newResident.nik || !newResident.address) {
+    if (!newResident.fullName || !newResident.nik || !newResident.address || !newResident.kk) {
         toast({
             title: "Data Tidak Lengkap",
-            description: "Mohon isi semua kolom yang wajib diisi (Nama, Alamat, NIK).",
+            description: "Mohon isi semua kolom yang wajib diisi (Nama, Alamat, NIK, No. KK).",
             variant: "destructive",
         });
         return;
@@ -86,16 +86,14 @@ export default function DataWargaPage() {
         return;
     }
     
-    if (newResident.kk) {
-        const kkRegex = /^\d{16}$/;
-        if (!kkRegex.test(newResident.kk)) {
-            toast({
-                title: "Format No. KK Salah",
-                description: "No. KK harus terdiri dari 16 digit angka.",
-                variant: "destructive",
-            });
-            return;
-        }
+    const kkRegex = /^\d{16}$/;
+    if (!kkRegex.test(newResident.kk)) {
+        toast({
+            title: "Format No. KK Salah",
+            description: "No. KK harus terdiri dari 16 digit angka.",
+            variant: "destructive",
+        });
+        return;
     }
 
     const existingCitizen = await getCitizenByNIK(newResident.nik);
@@ -194,6 +192,7 @@ export default function DataWargaPage() {
                   value={newResident.kk}
                   onChange={handleInputChange}
                   type="text"
+                  required
                 />
               </div>
               <div className="space-y-2">

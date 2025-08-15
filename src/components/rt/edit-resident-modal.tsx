@@ -42,6 +42,15 @@ export function EditResidentModal({ isOpen, onOpenChange, citizen, onSave }: Edi
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!formData.fullName || !formData.address || !formData.nik || !formData.kk) {
+       toast({
+            title: "Data Tidak Lengkap",
+            description: "Mohon isi semua kolom yang wajib diisi (Nama, Alamat, NIK, No. KK).",
+            variant: "destructive",
+        });
+        return;
+    }
+    
     const nikRegex = /^\d{16}$/;
     if (!nikRegex.test(formData.nik)) {
         toast({
@@ -64,16 +73,14 @@ export function EditResidentModal({ isOpen, onOpenChange, citizen, onSave }: Edi
       }
     }
     
-    if (formData.kk) {
-        const kkRegex = /^\d{16}$/;
-        if (!kkRegex.test(formData.kk)) {
-            toast({
-                title: "Format No. KK Salah",
-                description: "No. KK harus terdiri dari 16 digit angka.",
-                variant: "destructive",
-            });
-            return;
-        }
+    const kkRegex = /^\d{16}$/;
+    if (!kkRegex.test(formData.kk)) {
+        toast({
+            title: "Format No. KK Salah",
+            description: "No. KK harus terdiri dari 16 digit angka.",
+            variant: "destructive",
+        });
+        return;
     }
 
     onSave(formData);
@@ -127,6 +134,7 @@ export function EditResidentModal({ isOpen, onOpenChange, citizen, onSave }: Edi
                   value={formData.kk}
                   onChange={handleChange}
                   type="text"
+                  required
                 />
               </div>
           </div>
