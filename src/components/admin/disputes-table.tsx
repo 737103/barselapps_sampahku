@@ -22,10 +22,10 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { type Dispute, type Payment, type Citizen } from "@/lib/data";
+import { type Dispute } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { CitizenDetailModal } from "./citizen-detail-modal";
-import { getAllDisputes, getPaymentById, updateDisputeAndPaymentStatus } from "@/lib/firebase/firestore";
+import { getAllDisputes, updateDisputeAndPaymentStatus } from "@/lib/firebase/firestore";
 import Image from "next/image";
 
 type BadgeVariant = "destructive" | "secondary" | "default" | "outline";
@@ -42,7 +42,6 @@ export function DisputesTable() {
   const [loading, setLoading] = useState(true);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null);
-  const [selectedPayment, setSelectedPayment] = useState<(Payment & { citizen: Citizen }) | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -78,27 +77,9 @@ export function DisputesTable() {
     }
   }
 
-  const handleViewDetails = async (dispute: Dispute) => {
-    // A general dispute might not have a payment attached.
-    if (dispute.paymentId === "UMUM") {
-       toast({
-            title: "Sanggahan Umum",
-            description: "Ini adalah sanggahan umum dan tidak terkait dengan pembayaran spesifik.",
-        });
-       return;
-    }
-    const payment = await getPaymentById(dispute.paymentId);
-    if (payment && payment.citizen) {
-        setSelectedDispute(dispute);
-        setSelectedPayment(payment as Payment & { citizen: Citizen });
-        setIsDetailModalOpen(true);
-    } else {
-        toast({
-            title: "Data Pembayaran/Warga Tidak Ditemukan",
-            description: "Tidak dapat menemukan detail untuk sanggahan ini.",
-            variant: "destructive",
-        });
-    }
+  const handleViewDetails = (dispute: Dispute) => {
+    setSelectedDispute(dispute);
+    setIsDetailModalOpen(true);
   }
 
 
@@ -161,7 +142,7 @@ export function DisputesTable() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Tindakan</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => handleViewDetails(dispute)} disabled={dispute.paymentId === "UMUM"}>Lihat Detail</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleViewDetails(dispute)}>Lihat Detail</DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={() => handleStatusChange(dispute, 'Diproses')}>
                                     Tandai Diproses
@@ -189,12 +170,11 @@ export function DisputesTable() {
             </Table>
         </CardContent>
     </Card>
-    {selectedDispute && selectedPayment && (
+    {selectedDispute && (
         <CitizenDetailModal
             isOpen={isDetailModalOpen}
             onOpenChange={setIsDetailModalOpen}
             dispute={selectedDispute}
-            payment={selectedPayment}
         />
     )}
     </>

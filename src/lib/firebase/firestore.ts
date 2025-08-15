@@ -367,7 +367,16 @@ export const addDispute = async (disputeData: Omit<Dispute, 'id' | 'submittedDat
 export const getAllDisputes = async (): Promise<Dispute[]> => {
     try {
         const snapshot = await getDocs(disputesCollection);
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Dispute));
+        // Enrich disputes with citizen and payment info
+        const disputesWithDetails = await Promise.all(
+             snapshot.docs.map(async (doc) => {
+                const dispute = { id: doc.id, ...doc.data() } as Dispute;
+                const citizen = await getCitizenById(dispute.citizenId);
+                const payment = dispute.paymentId !== "UMUM" ? await getPaymentById(dispute.paymentId) : null;
+                return { ...dispute, citizen, payment };
+            })
+        );
+        return disputesWithDetails;
     } catch (error) {
         console.error("Error getting all disputes: ", error);
         return [];

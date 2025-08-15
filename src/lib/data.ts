@@ -34,6 +34,8 @@ export type Dispute = {
   proofUrl?: string | null;
   submittedDate: string;
   status: "Baru" | "Diproses" | "Selesai" | "Ditolak";
+  citizen?: Citizen | null;
+  payment?: Payment | null;
 };
 
 export type RTAccount = {
