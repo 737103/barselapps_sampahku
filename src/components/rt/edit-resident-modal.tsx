@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import React, { useState, useEffect } from "react";
 import type { Citizen } from "@/lib/data";
+import { useToast } from "@/hooks/use-toast";
+import { getCitizenByNIK } from "@/lib/firebase/firestore";
 
 type EditResidentModalProps = {
   isOpen: boolean;
@@ -24,6 +26,7 @@ type EditResidentModalProps = {
 
 export function EditResidentModal({ isOpen, onOpenChange, citizen, onSave }: EditResidentModalProps) {
   const [formData, setFormData] = useState(citizen);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (isOpen) {
@@ -36,8 +39,43 @@ export function EditResidentModal({ isOpen, onOpenChange, citizen, onSave }: Edi
     setFormData(prev => ({...prev, [id]: value}));
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const nikRegex = /^\d{16}$/;
+    if (!nikRegex.test(formData.nik)) {
+        toast({
+            title: "Format NIK Salah",
+            description: "NIK harus terdiri dari 16 digit angka.",
+            variant: "destructive",
+        });
+        return;
+    }
+    
+    if (formData.nik !== citizen.nik) {
+      const existingCitizen = await getCitizenByNIK(formData.nik);
+      if (existingCitizen) {
+          toast({
+              title: "NIK Sudah Terdaftar",
+              description: "NIK yang Anda masukkan sudah terdaftar untuk warga lain.",
+              variant: "destructive",
+          });
+          return;
+      }
+    }
+    
+    if (formData.kk) {
+        const kkRegex = /^\d{16}$/;
+        if (!kkRegex.test(formData.kk)) {
+            toast({
+                title: "Format No. KK Salah",
+                description: "No. KK harus terdiri dari 16 digit angka.",
+                variant: "destructive",
+            });
+            return;
+        }
+    }
+
     onSave(formData);
   }
 
@@ -78,6 +116,7 @@ export function EditResidentModal({ isOpen, onOpenChange, citizen, onSave }: Edi
                   value={formData.nik}
                   onChange={handleChange}
                   required
+                  type="number"
                 />
               </div>
               <div className="space-y-2">
@@ -87,6 +126,7 @@ export function EditResidentModal({ isOpen, onOpenChange, citizen, onSave }: Edi
                   maxLength={16}
                   value={formData.kk}
                   onChange={handleChange}
+                  type="number"
                 />
               </div>
           </div>

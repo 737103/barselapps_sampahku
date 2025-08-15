@@ -182,6 +182,7 @@ export default function DataWargaPage() {
                   value={newResident.nik}
                   onChange={handleInputChange}
                   required
+                  type="number"
                 />
               </div>
               <div className="space-y-2">
@@ -192,6 +193,7 @@ export default function DataWargaPage() {
                   maxLength={16}
                   value={newResident.kk}
                   onChange={handleInputChange}
+                  type="number"
                 />
               </div>
               <div className="space-y-2">
