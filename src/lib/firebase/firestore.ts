@@ -1,3 +1,4 @@
+
 import { db } from "@/lib/firebase";
 import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, query, where, getDoc, serverTimestamp, writeBatch } from "firebase/firestore";
 import type { Citizen, RTAccount, Payment, Dispute, Notification } from "../data";
@@ -392,10 +393,10 @@ export const updateDisputeAndPaymentStatus = async (dispute: Dispute, newStatus:
         const disputeRef = doc(db, "disputes", dispute.id);
         batch.update(disputeRef, { status: newStatus });
 
-        // 2. If status is 'Selesai' and it's not a general dispute, update payment status to 'Lunas'
+        // 2. If status is 'Selesai' and it's not a general dispute, update payment status and amount
         if (newStatus === 'Selesai' && dispute.paymentId !== "UMUM") {
             const paymentRef = doc(db, "payments", dispute.paymentId);
-            batch.update(paymentRef, { status: "Lunas" });
+            batch.update(paymentRef, { status: "Lunas", amount: 25000 });
         }
 
         await batch.commit();
