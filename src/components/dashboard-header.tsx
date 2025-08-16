@@ -3,6 +3,7 @@
 import { UserNav } from "@/components/user-nav";
 import { cn } from "@/lib/utils";
 import { Icons } from "./icons";
+import { Suspense } from "react";
 
 type DashboardHeaderProps = React.HTMLAttributes<HTMLDivElement> & {
     user: {
@@ -24,7 +25,9 @@ export function DashboardHeader({ user, title, className }: DashboardHeaderProps
             <div className="h-6 w-px bg-border" />
             <h1 className="text-lg font-semibold md:text-xl font-headline">{title}</h1>
         </div>
-        <UserNav name={user.name} email={user.email} role={user.role} />
+        <Suspense fallback={<div>Loading...</div>}>
+            <UserNav name={user.name} email={user.email} role={user.role} />
+        </Suspense>
     </header>
   );
 }
