@@ -159,6 +159,7 @@ export function HistoryTable() {
                     <TableHead>Tanggal Bayar</TableHead>
                     <TableHead>Jumlah</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>No. Kupon</TableHead>
                     <TableHead>Bukti</TableHead>
                     <TableHead className="text-right">Aksi</TableHead>
                 </TableRow>
@@ -166,7 +167,7 @@ export function HistoryTable() {
                 <TableBody>
                 {loading ? (
                     <TableRow>
-                        <TableCell colSpan={6} className="text-center">Memuat riwayat...</TableCell>
+                        <TableCell colSpan={7} className="text-center">Memuat riwayat...</TableCell>
                     </TableRow>
                 ) : paginatedHistory.length > 0 ? (
                     paginatedHistory.map((payment) => (
@@ -179,6 +180,7 @@ export function HistoryTable() {
                                 {payment.status}
                             </Badge>
                         </TableCell>
+                        <TableCell>{payment.citizen?.couponNumber || '-'}</TableCell>
                         <TableCell>
                             {payment.proofUrl ? (
                                 <Image 
@@ -214,7 +216,7 @@ export function HistoryTable() {
                     ))
                 ) : (
                      <TableRow>
-                        <TableCell colSpan={6} className="text-center">Belum ada riwayat pembayaran.</TableCell>
+                        <TableCell colSpan={7} className="text-center">Belum ada riwayat pembayaran.</TableCell>
                     </TableRow>
                 )}
                 </TableBody>
