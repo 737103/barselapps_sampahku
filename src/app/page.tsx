@@ -17,7 +17,7 @@ export default function LoginPage() {
       <div className="relative z-10 mx-auto flex w-full max-w-[350px] flex-col justify-center space-y-6 rounded-lg bg-background/80 p-6 shadow-lg backdrop-blur-sm">
         <div className="flex flex-col items-center space-y-4 text-center">
             <Image
-                src="https://images.unsplash.com/photo-1542903660-eedba2cda473?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NTV8fGluZm9ybWFzaXxlbnwwfHwwfHx8MA%3D%3D"
+                src="https://images.unsplash.com/photo-1755310672242-80ce88b024b9?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwcm9maWxlLXBhZ2V8MXx8fGVufDB8fHx8fA%3D%3D"
                 alt="Login Banner"
                 width={300}
                 height={150}
