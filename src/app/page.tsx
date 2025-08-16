@@ -5,7 +5,7 @@ import Image from "next/image";
 
 export default function LoginPage() {
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-blue-100">
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-red-800">
       <div className="relative z-10 mx-auto flex w-full max-w-[350px] flex-col justify-center space-y-6 rounded-lg bg-background/80 p-6 shadow-lg backdrop-blur-sm">
         <Image
           src="https://images.unsplash.com/photo-1755310672242-80ce88b024b9"
