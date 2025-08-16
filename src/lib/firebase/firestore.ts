@@ -1,4 +1,5 @@
 
+
 import { db } from "@/lib/firebase";
 import { collection, getDocs, addDoc, doc, updateDoc, deleteDoc, query, where, getDoc, serverTimestamp, writeBatch } from "firebase/firestore";
 import type { Citizen, RTAccount, Payment, Dispute, Notification } from "../data";
@@ -415,6 +416,17 @@ export const updateDisputeAndPaymentStatus = async (dispute: Dispute, newStatus:
         return false;
     }
 }
+
+export const deleteDispute = async (id: string): Promise<boolean> => {
+    try {
+        const docRef = doc(db, "disputes", id);
+        await deleteDoc(docRef);
+        return true;
+    } catch (error) {
+        console.error("Error deleting dispute: ", error);
+        return false;
+    }
+};
 
 
 // --- Admin Account Functions ---

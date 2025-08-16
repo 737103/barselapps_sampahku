@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -25,8 +26,9 @@ import {
 import { type Dispute } from "@/lib/data";
 import { useToast } from "@/hooks/use-toast";
 import { CitizenDetailModal } from "./citizen-detail-modal";
-import { getAllDisputes, updateDisputeAndPaymentStatus } from "@/lib/firebase/firestore";
+import { getAllDisputes, updateDisputeAndPaymentStatus, deleteDispute } from "@/lib/firebase/firestore";
 import Image from "next/image";
+import { DeleteDisputeAlert } from "./delete-dispute-alert";
 
 type BadgeVariant = "destructive" | "secondary" | "default" | "outline";
 
@@ -43,6 +45,7 @@ export function DisputesTable() {
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
@@ -86,6 +89,31 @@ export function DisputesTable() {
     setSelectedDispute(dispute);
     setIsDetailModalOpen(true);
   }
+
+  const handleDeleteClick = (dispute: Dispute) => {
+    setSelectedDispute(dispute);
+    setIsDeleteAlertOpen(true);
+  };
+  
+  const confirmDelete = async () => {
+    if (!selectedDispute) return;
+    const success = await deleteDispute(selectedDispute.id);
+    if (success) {
+      setDisputes(prev => prev.filter(d => d.id !== selectedDispute.id));
+      toast({
+        title: "Sanggahan Dihapus",
+        description: "Data sanggahan telah berhasil dihapus.",
+      });
+    } else {
+      toast({
+        title: "Gagal Menghapus Sanggahan",
+        description: "Terjadi kesalahan saat menghapus sanggahan.",
+        variant: "destructive",
+      });
+    }
+    setIsDeleteAlertOpen(false);
+    setSelectedDispute(null);
+  };
 
   const paginatedDisputes = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -167,6 +195,13 @@ export function DisputesTable() {
                                 >
                                     Tandai Ditolak
                                 </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                    className="text-destructive focus:text-destructive"
+                                    onClick={() => handleDeleteClick(dispute)}
+                                   >
+                                    Hapus
+                                  </DropdownMenuItem>
                             </DropdownMenuContent>
                             </DropdownMenu>
                         </TableCell>
@@ -205,11 +240,19 @@ export function DisputesTable() {
         )}
     </Card>
     {selectedDispute && (
+      <>
         <CitizenDetailModal
             isOpen={isDetailModalOpen}
             onOpenChange={setIsDetailModalOpen}
             dispute={selectedDispute}
         />
+        <DeleteDisputeAlert
+          isOpen={isDeleteAlertOpen}
+          onOpenChange={setIsDeleteAlertOpen}
+          onConfirm={confirmDelete}
+          dispute={selectedDispute}
+        />
+      </>
     )}
     </>
   );
