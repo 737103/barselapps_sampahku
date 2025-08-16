@@ -20,16 +20,21 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import type { Citizen } from "@/lib/data";
 import { ViewCitizenDetailsModal } from "./view-citizen-details-modal";
-import { getAllCitizens } from "@/lib/firebase/firestore";
+import { getAllCitizens, deleteCitizen } from "@/lib/firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
+import { DeleteCitizenAlert } from "./delete-citizen-alert";
 
 export function AllResidentsTable() {
   const [residents, setResidents] = useState<Citizen[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
   const [selectedCitizen, setSelectedCitizen] = useState<Citizen | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchCitizens = async () => {
@@ -44,6 +49,31 @@ export function AllResidentsTable() {
   const handleViewDetails = (resident: Citizen) => {
     setSelectedCitizen(resident);
     setIsModalOpen(true);
+  };
+
+  const handleDeleteClick = (resident: Citizen) => {
+    setSelectedCitizen(resident);
+    setIsDeleteAlertOpen(true);
+  };
+  
+  const confirmDelete = async () => {
+    if (!selectedCitizen) return;
+    const success = await deleteCitizen(selectedCitizen.id);
+    if (success) {
+      setResidents(prev => prev.filter(r => r.id !== selectedCitizen.id));
+      toast({
+        title: "Data Warga Dihapus",
+        description: `Data untuk ${selectedCitizen.name} telah berhasil dihapus.`,
+      });
+    } else {
+      toast({
+        title: "Gagal Menghapus Data",
+        description: "Terjadi kesalahan saat menghapus data warga.",
+        variant: "destructive",
+      });
+    }
+    setIsDeleteAlertOpen(false);
+    setSelectedCitizen(null);
   };
 
   return (
@@ -96,6 +126,13 @@ export function AllResidentsTable() {
                                           Lihat Riwayat Pembayaran
                                       </DropdownMenuItem>
                                   </Link>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem 
+                                    className="text-destructive focus:text-destructive"
+                                    onClick={() => handleDeleteClick(resident)}
+                                   >
+                                    Hapus Data Warga
+                                  </DropdownMenuItem>
                               </DropdownMenuContent>
                           </DropdownMenu>
                       </TableCell>
@@ -111,11 +148,19 @@ export function AllResidentsTable() {
         </CardContent>
     </Card>
     {selectedCitizen && (
+      <>
         <ViewCitizenDetailsModal
             isOpen={isModalOpen}
             onOpenChange={setIsModalOpen}
             citizen={selectedCitizen}
         />
+        <DeleteCitizenAlert
+          isOpen={isDeleteAlertOpen}
+          onOpenChange={setIsDeleteAlertOpen}
+          onConfirm={confirmDelete}
+          citizen={selectedCitizen}
+        />
+      </>
     )}
     </>
   );
