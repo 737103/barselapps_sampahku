@@ -83,6 +83,7 @@ export function HistoryTable() {
         const doc = new jsPDF();
         const pageWidth = doc.internal.pageSize.getWidth();
         const citizenName = payment.citizen?.name || 'Warga';
+        const couponNumber = payment.citizen?.couponNumber || 'N/A';
         const paymentDate = payment.paymentDate ? parse(payment.paymentDate, 'yyyy-MM-dd', new Date()) : new Date();
         const formattedDate = format(paymentDate, "dd MMMM yyyy", { locale: id });
     
@@ -106,27 +107,32 @@ export function HistoryTable() {
         doc.text("Sudah terima dari", labelX, startY);
         doc.text(":", valueX - 2, startY);
         doc.text(citizenName, valueX, startY);
-    
-        doc.text("Uang Sebesar", labelX, startY + lineHeight);
+
+        doc.text("No. Kupon", labelX, startY + lineHeight);
         doc.text(":", valueX - 2, startY + lineHeight);
+        doc.text(couponNumber, valueX, startY + lineHeight);
+    
+        doc.text("Uang Sebesar", labelX, startY + lineHeight * 2);
+        doc.text(":", valueX - 2, startY + lineHeight * 2);
         doc.setFont('helvetica', 'italic');
-        doc.text(`${terbilang(payment.amount)} Rupiah`, valueX, startY + lineHeight);
+        doc.text(`${terbilang(payment.amount)} Rupiah`, valueX, startY + lineHeight * 2);
         doc.setFont('helvetica', 'normal');
     
-        doc.text("Untuk Pembayaran", labelX, startY + lineHeight * 2);
-        doc.text(":", valueX - 2, startY + lineHeight * 2);
-        doc.text(`Iuran sampah bulan ${payment.period}`, valueX, startY + lineHeight * 2);
+        doc.text("Untuk Pembayaran", labelX, startY + lineHeight * 3);
+        doc.text(":", valueX - 2, startY + lineHeight * 3);
+        doc.text(`Iuran sampah bulan ${payment.period}`, valueX, startY + lineHeight * 3);
     
         // Amount Box
+        const amountBoxY = startY + lineHeight * 5;
         doc.setFont('helvetica', 'bold');
-        doc.text(`Rp. ${payment.amount.toLocaleString('id-ID')},-`, labelX, startY + lineHeight * 4);
+        doc.text(`Rp. ${payment.amount.toLocaleString('id-ID')},-`, labelX, amountBoxY);
         doc.setFont('helvetica', 'normal');
     
         // Signature section
         const signatureX = pageWidth - 70;
-        doc.text(`Makassar, ${formattedDate}`, signatureX, startY + lineHeight * 4);
-        doc.text("Kolektor Sampah,", signatureX, startY + lineHeight * 6);
-        doc.text("Juliati S", signatureX, startY + lineHeight * 9);
+        doc.text(`Makassar, ${formattedDate}`, signatureX, amountBoxY);
+        doc.text("Kolektor Sampah,", signatureX, amountBoxY + (lineHeight * 2));
+        doc.text("Juliati S", signatureX, amountBoxY + (lineHeight * 5));
     
     
         doc.save(`Kuitansi_${citizenName.replace(/ /g, '_')}_${payment.period.replace(/ /g, '_')}.pdf`);
